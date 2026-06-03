@@ -1425,15 +1425,30 @@ def api_clases_json(request):
 
 
 def api_estado_kleit(request):
+    import urllib.request, urllib.error
     from django.conf import settings
     api_key = getattr(settings, 'GEMINI_API_KEY', '')
-    activo = bool(api_key)
-    modelo = getattr(settings, 'GEMINI_MODEL', 'gemini-2.0-flash') if activo else None
-    return JsonResponse({
-        'gemini_activo': activo,
-        'modelo': modelo,
-        'mensaje': 'Gemini IA activa' if activo else 'Usando banco local',
-    })
+    modelo  = getattr(settings, 'GEMINI_MODEL', 'gemini-2.0-flash')
+
+    if not api_key:
+        return JsonResponse({'gemini_activo': False, 'modelo': modelo, 'error': 'GEMINI_API_KEY no configurada en Railway'})
+
+    url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
+           f"{modelo}:generateContent?key={api_key}")
+    body = json.dumps({
+        'contents': [{'role': 'user', 'parts': [{'text': 'hola'}]}],
+        'generationConfig': {'maxOutputTokens': 5},
+    }).encode()
+    req = urllib.request.Request(url, data=body, method='POST')
+    req.add_header('Content-Type', 'application/json')
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return JsonResponse({'gemini_activo': True, 'modelo': modelo, 'mensaje': 'API OK'})
+    except urllib.error.HTTPError as e:
+        detalle = e.read().decode(errors='ignore')[:400]
+        return JsonResponse({'gemini_activo': False, 'modelo': modelo, 'error': f'HTTP {e.code}', 'detalle': detalle})
+    except Exception as e:
+        return JsonResponse({'gemini_activo': False, 'modelo': modelo, 'error': str(e)})
 
 
 def perfil_view(request):
