@@ -103,12 +103,25 @@ input::placeholder{color:rgba(255,255,255,0.4);}
   <div class="auth-card">
     {% if verificacion_enviada %}
     <div style="text-align:center;padding:1rem 0;">
+      {% if email_enviado %}
       <div style="font-size:2.5rem;margin-bottom:1rem;">📬</div>
       <h1 style="font-size:1.5rem;margin-bottom:0.5rem;">¡Revisa tu correo!</h1>
       <p style="opacity:0.8;font-size:0.87rem;line-height:1.6;margin-bottom:1.5rem;">
         Enviamos un código de 6 dígitos a <strong>{{ correo }}</strong>.<br>
         Ingrésalo en la siguiente pantalla para activar tu cuenta.
       </p>
+      {% else %}
+      <div style="font-size:2.5rem;margin-bottom:1rem;">⚠️</div>
+      <h1 style="font-size:1.5rem;margin-bottom:0.5rem;">No se pudo enviar el correo</h1>
+      <p style="opacity:0.8;font-size:0.87rem;line-height:1.6;margin-bottom:1rem;">
+        Hubo un problema al enviar el correo a <strong>{{ correo }}</strong>.<br>
+        Tu código de verificación es:
+      </p>
+      <div style="background:rgba(106,128,226,0.25);border:2px solid #6a80e2;border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:2rem;font-weight:900;letter-spacing:0.5rem;">
+        {{ codigo_fallback }}
+      </div>
+      <p style="opacity:0.7;font-size:0.8rem;margin-bottom:1.5rem;">Guarda este código — lo necesitas para activar tu cuenta.</p>
+      {% endif %}
       <a href="/verificar-email/?correo={{ correo }}" class="submit-btn" style="display:block;text-decoration:none;margin-bottom:0.75rem;">
         Ingresar mi código →
       </a>

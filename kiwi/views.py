@@ -135,24 +135,32 @@ def registro_view(request):
                     email_verificado=False,
                     token_verificacion=codigo,
                 )
-                send_mail(
-                    subject='Tu código de verificación KIWI',
-                    message=(
-                        f'Hola {nombre},\n\n'
-                        f'Tu código de verificación es:\n\n'
-                        f'        {codigo}\n\n'
-                        f'Ingrésalo en la aplicación para activar tu cuenta.\n'
-                        f'El código expira cuando solicites uno nuevo.\n\n'
-                        f'Si no creaste esta cuenta puedes ignorar este mensaje.\n\n'
-                        f'— El equipo de KIWI'
-                    ),
-                    from_email=None,
-                    recipient_list=[correo],
-                    fail_silently=True,
-                )
+                email_enviado = False
+                try:
+                    send_mail(
+                        subject='Tu código de verificación KIWI',
+                        message=(
+                            f'Hola {nombre},\n\n'
+                            f'Tu código de verificación es:\n\n'
+                            f'        {codigo}\n\n'
+                            f'Ingrésalo en la aplicación para activar tu cuenta.\n'
+                            f'El código expira cuando solicites uno nuevo.\n\n'
+                            f'Si no creaste esta cuenta puedes ignorar este mensaje.\n\n'
+                            f'— El equipo de KIWI'
+                        ),
+                        from_email=None,
+                        recipient_list=[correo],
+                        fail_silently=False,
+                    )
+                    email_enviado = True
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).error(f'Error enviando correo de verificación a {correo}: {e}')
                 return render(request, 'kiwi/registro.html', {
                     'verificacion_enviada': True,
                     'correo': correo,
+                    'email_enviado': email_enviado,
+                    'codigo_fallback': codigo if not email_enviado else None,
                 })
             return render(request, 'kiwi/registro.html', {
                 'step': 2, 'error': error,
@@ -197,19 +205,23 @@ def reenviar_verificacion_view(request):
             codigo = str(random.randint(100000, 999999))
             usuario.token_verificacion = codigo
             usuario.save()
-            send_mail(
-                subject='Tu código de verificación KIWI',
-                message=(
-                    f'Hola {usuario.nombre},\n\n'
-                    f'Tu nuevo código de verificación es:\n\n'
-                    f'        {codigo}\n\n'
-                    f'Ingrésalo en la aplicación para activar tu cuenta.\n\n'
-                    f'— El equipo de KIWI'
-                ),
-                from_email=None,
-                recipient_list=[correo],
-                fail_silently=True,
-            )
+            try:
+                send_mail(
+                    subject='Tu código de verificación KIWI',
+                    message=(
+                        f'Hola {usuario.nombre},\n\n'
+                        f'Tu nuevo código de verificación es:\n\n'
+                        f'        {codigo}\n\n'
+                        f'Ingrésalo en la aplicación para activar tu cuenta.\n\n'
+                        f'— El equipo de KIWI'
+                    ),
+                    from_email=None,
+                    recipient_list=[correo],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f'Error reenviando código a {correo}: {e}')
         except Usuario.DoesNotExist:
             pass
     correo = request.POST.get('correo', '').strip()
