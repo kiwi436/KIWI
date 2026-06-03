@@ -1452,7 +1452,7 @@ def gmail_conectar_view(request):
     from django.conf import settings as djsettings
     client_id = getattr(djsettings, 'GOOGLE_CLIENT_ID', '')
     site_url  = getattr(djsettings, 'SITE_URL', 'http://127.0.0.1:8000')
-    redirect_uri = f'{site_url}/admin/gmail/callback/'
+    redirect_uri = f'{site_url}/configuracion/gmail/callback/'
     params = urllib.parse.urlencode({
         'client_id':     client_id,
         'redirect_uri':  redirect_uri,
@@ -1476,7 +1476,7 @@ def gmail_callback_view(request):
         return redirect('dashboard')
 
     site_url     = getattr(djsettings, 'SITE_URL', 'http://127.0.0.1:8000')
-    redirect_uri = f'{site_url}/admin/gmail/callback/'
+    redirect_uri = f'{site_url}/configuracion/gmail/callback/'
     data = urllib.parse.urlencode({
         'code':          code,
         'client_id':     getattr(djsettings, 'GOOGLE_CLIENT_ID', ''),

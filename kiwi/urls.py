@@ -13,8 +13,8 @@ urlpatterns = [
     path('reenviar-verificacion/', views.reenviar_verificacion_view, name='reenviar_verificacion'),
     path('recuperar-password/', views.recuperar_password_view, name='recuperar_password'),
     path('recuperar-password/confirmar/', views.recuperar_password_confirmar_view, name='recuperar_password_confirmar'),
-    path('admin/gmail/conectar/', views.gmail_conectar_view, name='gmail_conectar'),
-    path('admin/gmail/callback/', views.gmail_callback_view, name='gmail_callback'),
+    path('configuracion/gmail/conectar/', views.gmail_conectar_view, name='gmail_conectar'),
+    path('configuracion/gmail/callback/', views.gmail_callback_view, name='gmail_callback'),
     path('perfil/', views.perfil_view, name='perfil'),
 
     # ── App ──────────────────────────────────────────────────────
