@@ -1,0 +1,738 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| Plan de Aula{% endblock %}
+{% block topbar_icon %}file-lines{% endblock %}
+{% block topbar_title %}Plan de Aula{% endblock %}
+{% block extra_css %}
+<style>
+/* ══ PLAN DE AULA ══ */
+.plan-hero {
+  background: linear-gradient(135deg, #0f2460 0%, var(--blue1) 50%, var(--blue2) 100%);
+  border-radius: var(--radius-lg); padding: 2rem 2.5rem;
+  color: white; margin-bottom: 2rem; position: relative; overflow: hidden;
+}
+.plan-hero::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 220px; height: 220px; border-radius: 50%; background: rgba(255,255,255,0.05);
+}
+.plan-hero h1 { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.3rem; }
+.plan-hero p  { font-size: 0.84rem; opacity: 0.85; margin: 0; }
+.plan-hero-icon {
+  position: absolute; right: 2.5rem; top: 50%; transform: translateY(-50%);
+  font-size: 5.5rem; opacity: 0.07;
+}
+
+/* Grado pills */
+.grado-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.grado-pill {
+  padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.74rem; font-weight: 800;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: all 0.18s; color: var(--text-muted); user-select: none;
+}
+.grado-pill:hover   { border-color: var(--blue2); color: var(--blue2); }
+.grado-pill.selected{ background: var(--blue2); color: white; border-color: var(--blue2); }
+.grado-ciclo-label {
+  width: 100%; font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin: 0.45rem 0 0.2rem;
+}
+
+/* Form card */
+.plan-form-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+}
+.plan-form-header {
+  padding: 1.1rem 1.5rem; border-bottom: 1.5px solid var(--border);
+  background: linear-gradient(135deg, rgba(106,128,226,0.08), rgba(53,69,143,0.04));
+}
+.plan-form-header h3 { font-size: 0.95rem; font-weight: 900; color: var(--blue1); margin: 0; }
+[data-theme="dark"] .plan-form-header h3 { color: var(--blue2); }
+.plan-form-body { padding: 1.4rem; }
+
+/* Section headers inside form */
+.form-section-title {
+  font-size: 0.65rem; font-weight: 900; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--blue2);
+  margin: 1.2rem 0 0.7rem;
+  padding-bottom: 0.35rem; border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+
+/* Numbered chip */
+.field-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 6px;
+  background: var(--blue2); color: white;
+  font-size: 0.6rem; font-weight: 900; flex-shrink: 0;
+}
+
+/* Tipo selector cards */
+.tipo-card {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem; border: 1.5px solid var(--border);
+  border-radius: 12px; cursor: pointer; transition: all 0.18s;
+  background: var(--surface);
+}
+.tipo-card:has(input:checked) { border-color: var(--blue2); background: rgba(106,128,226,0.07); }
+
+/* Plan list sidebar */
+.plan-list { display: flex; flex-direction: column; gap: 0.65rem; }
+.plan-item {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 0.9rem 1.1rem;
+  display: flex; align-items: center; gap: 0.9rem;
+  text-decoration: none; color: var(--text);
+  transition: all 0.2s; position: relative; overflow: hidden;
+}
+.plan-item::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px; background: var(--blue2);
+}
+.plan-item:hover { border-color: var(--blue2); transform: translateX(3px); text-decoration: none; color: var(--text); }
+.plan-item-icon { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.icon-plan   { background: linear-gradient(135deg, var(--blue3), var(--blue2)); color: white; }
+.icon-pensum { background: linear-gradient(135deg, #5b21b6, #7c3aed); color: white; }
+.plan-item-info { flex: 1; min-width: 0; }
+.plan-item-title { font-size: 0.86rem; font-weight: 900; margin-bottom: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.plan-item-meta  { font-size: 0.7rem; color: var(--text-muted); display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+/* Empty state */
+.plan-empty { text-align: center; padding: 2.5rem 1.5rem; border: 2px dashed var(--border); border-radius: 14px; background: var(--blue-bg); }
+
+/* Competencia SEL cards */
+.sel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+.sel-card {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.6rem 0.75rem; border: 1.5px solid var(--border);
+  border-radius: 10px; cursor: pointer; transition: all 0.18s;
+  background: var(--surface); font-size: 0.73rem; font-weight: 700;
+  color: var(--text-muted);
+}
+.sel-card:has(input:checked) { border-color: var(--blue2); background: rgba(106,128,226,0.07); color: var(--text); }
+.sel-card input { display: none; }
+.sel-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* Badge purple */
+.badge-purple { background: rgba(139,92,246,0.12); color: #6d28d9; }
+[data-theme="dark"] .badge-purple { color: #a78bfa; }
+
+/* Botones selector de cantidad de desempeños */
+.num-desemp-btn {
+  padding: 0.3rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 800;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: all 0.18s; color: var(--text-muted);
+}
+.num-desemp-btn:hover { border-color: var(--blue2); color: var(--blue2); }
+.num-desemp-btn.active { background: var(--blue2); color: white; border-color: var(--blue2); }
+
+/* Bloque de un desempeño dentro del container dinámico */
+.desemp-block {
+  background: rgba(30,58,138,0.03); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 1rem; margin-bottom: 0.85rem;
+}
+.desemp-block-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.68rem; font-weight: 900; color: var(--blue2);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 0.85rem; padding-bottom: 0.45rem;
+  border-bottom: 1.5px solid var(--border);
+}
+[data-theme="dark"] .desemp-block { background: rgba(99,102,241,0.04); }
+
+/* ══ LOADING OVERLAY ══ */
+#kiwi-gen-overlay {
+  display: none; position: fixed; inset: 0; z-index: 10000;
+  background: linear-gradient(135deg, #0a1740 0%, #122060 45%, #1e3a8a 100%);
+  align-items: center; justify-content: center; flex-direction: column;
+}
+.gen-card {
+  background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 24px; padding: 2.5rem 2rem; max-width: 480px; width: 100%;
+  text-align: center; color: white;
+}
+.gen-robot-wrap {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem; font-size: 2.2rem;
+  animation: genPulse 2s ease-in-out infinite;
+}
+@keyframes genPulse {
+  0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0.15); }
+  50%      { transform: scale(1.07); box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+}
+.gen-title { font-size: 1.2rem; font-weight: 900; margin-bottom: 0.3rem; }
+.gen-sub   { font-size: 0.78rem; opacity: 0.7; margin-bottom: 1.5rem; }
+.gen-step-text { font-size: 0.85rem; font-weight: 700; margin-bottom: 1.1rem; min-height: 1.3rem; transition: opacity 0.4s; }
+.gen-bar-track { background: rgba(255,255,255,0.15); border-radius: 20px; height: 9px; overflow: hidden; margin-bottom: 0.4rem; }
+.gen-bar-fill {
+  height: 100%; border-radius: 20px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa, #34d399);
+  background-size: 200% 100%;
+  transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+  animation: barShimmer 2.5s linear infinite; width: 0%;
+}
+@keyframes barShimmer { 0%{background-position:0 0} 100%{background-position:200% 0} }
+.gen-pct { font-size: 0.75rem; opacity: 0.65; margin-bottom: 1.2rem; }
+.gen-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; min-height: 24px; }
+.gen-chip {
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+  padding: 0.15rem 0.55rem; border-radius: 20px;
+  font-size: 0.6rem; font-weight: 700; animation: chipIn 0.35s ease;
+}
+@keyframes chipIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+.gen-dots { display: flex; gap: 0.4rem; justify-content: center; margin-top: 1.5rem; }
+.gen-dot  { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); animation: dotBounce 1.4s ease-in-out infinite; }
+.gen-dot:nth-child(2){ animation-delay:.2s; }
+.gen-dot:nth-child(3){ animation-delay:.4s; }
+@keyframes dotBounce { 0%,80%,100%{transform:scale(0.6)} 40%{transform:scale(1.1);background:rgba(255,255,255,0.9);} }
+#genErrorBox { display:none; margin-top:1rem; background:rgba(239,68,68,0.2); border:1.5px solid rgba(239,68,68,0.4); border-radius:12px; padding:0.7rem 0.9rem; font-size:0.78rem; color:#fca5a5; }
+</style>
+{% endblock %}
+{% with active='plan_aula' %}
+{% block content %}
+
+<!-- ══ LOADING OVERLAY ══ -->
+<div id="kiwi-gen-overlay">
+  <div class="gen-card">
+    <div class="gen-robot-wrap"><i class="fa-solid fa-robot" id="genIcon"></i></div>
+    <div class="gen-title">Kleit está generando tu plan</div>
+    <div class="gen-sub">Esto puede tardar hasta 1 minuto. No cierres la pestaña.</div>
+    <div class="gen-step-text" id="genStepText">
+      <i class="fa-solid fa-circle-notch fa-spin" style="margin-right:0.4rem;"></i>Iniciando...
+    </div>
+    <div class="gen-bar-track"><div class="gen-bar-fill" id="genBar"></div></div>
+    <div class="gen-pct" id="genPct">0%</div>
+    <div class="gen-chips" id="genChips"></div>
+    <div id="genErrorBox">
+      <i class="fa-solid fa-triangle-exclamation" style="margin-right:0.4rem;"></i>
+      <span id="genErrorMsg"></span>
+      <div style="margin-top:0.6rem;">
+        <button onclick="hideOverlay()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:0.3rem 0.9rem;border-radius:20px;font-size:0.73rem;font-weight:700;cursor:pointer;">
+          Cerrar y reintentar
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="gen-dots"><div class="gen-dot"></div><div class="gen-dot"></div><div class="gen-dot"></div></div>
+</div>
+
+<!-- ══ HERO ══ -->
+<div class="plan-hero">
+  <div style="position:relative;z-index:1;max-width:620px;">
+    <div style="font-size:0.65rem;font-weight:800;letter-spacing:0.14em;opacity:0.7;text-transform:uppercase;margin-bottom:0.4rem;">
+      <i class="fa-solid fa-graduation-cap"></i> &nbsp;Colegio San Francisco de Asís — Gestión Socioemocional
+    </div>
+    <h1>Plan de Aula — Área de Emociones</h1>
+  </div>
+  <i class="fa-solid fa-file-lines plan-hero-icon"></i>
+</div>
+
+<div class="row g-4">
+
+  <!-- ══ FORMULARIO ══ -->
+  <div class="col-lg-7">
+    <div class="plan-form-card">
+      <div class="plan-form-header">
+        <h3>
+          <i class="fa-solid fa-wand-magic-sparkles" style="color:var(--blue2);margin-right:0.4rem;"></i>
+          Nuevo plan de aula con Kleit IA
+        </h3>
+        <p style="font-size:0.76rem;color:var(--text-muted);margin:0.2rem 0 0;">
+          Completa la información y Kleit generará el plan completo en el formato institucional
+        </p>
+      </div>
+      <div class="plan-form-body">
+        <form id="planForm" method="post" action="/plan-aula/generar/" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="metodologia" value="integrado">
+
+          <!-- ══ SECCIÓN 1: IDENTIFICACIÓN ══ -->
+          <div class="form-section-title">
+            <i class="fa-solid fa-id-card"></i> Identificación del plan
+          </div>
+
+          <!-- Tipo (solo Plan de Aula) -->
+          <input type="hidden" name="tipo" value="plan_aula">
+
+          <!-- Título -->
+          <div class="mb-3">
+            <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+              <span class="field-num">1</span> Título del plan *
+            </label>
+            <input type="text" class="form-control" name="titulo"
+              placeholder='Ej: "Autorregulación emocional — Grado 8°, Período II"' required>
+          </div>
+
+          <!-- Grado + Período en fila -->
+          <div class="row g-3 mb-3">
+            <div class="col-8">
+              <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+                <span class="field-num">2</span> Grado *
+              </label>
+              <input type="hidden" name="grado" id="gradoHidden">
+              <div class="grado-grid" id="gradoGrid">
+                <div class="grado-ciclo-label"><i class="fa-solid fa-seedling" style="margin-right:0.25rem;"></i>Ciclo Inicial</div>
+                <label class="grado-pill" onclick="selectGrado('jardin',    this)">Jardín</label>
+                <label class="grado-pill" onclick="selectGrado('transicion',this)">Transición</label>
+                <div class="grado-ciclo-label"><i class="fa-solid fa-star" style="margin-right:0.25rem;"></i>Ciclo I — Primaria</div>
+                <label class="grado-pill" onclick="selectGrado('primero',this)">1°</label>
+                <label class="grado-pill" onclick="selectGrado('segundo',this)">2°</label>
+                <div class="grado-ciclo-label"><i class="fa-solid fa-star-half-stroke" style="margin-right:0.25rem;"></i>Ciclo II — Primaria</div>
+                <label class="grado-pill" onclick="selectGrado('tercero',this)">3°</label>
+                <label class="grado-pill" onclick="selectGrado('cuarto', this)">4°</label>
+                <label class="grado-pill" onclick="selectGrado('quinto', this)">5°</label>
+                <div class="grado-ciclo-label"><i class="fa-solid fa-book-open" style="margin-right:0.25rem;"></i>Ciclo III — Bachillerato</div>
+                <label class="grado-pill" onclick="selectGrado('sexto',   this)">6°</label>
+                <label class="grado-pill" onclick="selectGrado('septimo', this)">7°</label>
+                <label class="grado-pill" onclick="selectGrado('octavo',  this)">8°</label>
+                <div class="grado-ciclo-label"><i class="fa-solid fa-graduation-cap" style="margin-right:0.25rem;"></i>Ciclo IV — Bachillerato</div>
+                <label class="grado-pill" onclick="selectGrado('noveno',this)">9°</label>
+                <label class="grado-pill" onclick="selectGrado('decimo',this)">10°</label>
+                <label class="grado-pill" onclick="selectGrado('once',  this)">11°</label>
+              </div>
+              <div id="gradoError" style="display:none;font-size:0.73rem;color:var(--danger);margin-top:0.25rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Selecciona un grado
+              </div>
+            </div>
+            <div class="col-4">
+              <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+                <span class="field-num">3</span> Período *
+              </label>
+              <select class="form-select" name="periodo" style="font-size:0.85rem;">
+                {% for val, label in periodos %}
+                <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+              <div style="margin-top:0.75rem;">
+                <label class="form-label" style="font-size:0.76rem;">Duración</label>
+                <select class="form-select" name="duracion_semanas" style="font-size:0.82rem;">
+                  <option value="4" selected>4 semanas</option>
+                  <option value="8">8 semanas</option>
+                  <option value="10">10 semanas</option>
+                  <option value="12">12 semanas</option>
+                  <option value="16">16 semanas</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- ══ SECCIÓN 2: COMPETENCIA SEL ══ -->
+          <div class="form-section-title">
+            <i class="fa-solid fa-heart-pulse"></i> Competencia socioemocional (SEL)
+          </div>
+          <div class="sel-grid mb-3">
+            {% for val, label in competencias_sel %}
+            <label class="sel-card">
+              <input type="radio" name="competencia_sel" value="{{ val }}"
+                {% if forloop.first %}checked{% endif %}
+                onchange="updateSelUI()">
+              <div class="sel-dot" style="background:{% if val == 'autoconciencia' %}#f59e0b{% elif val == 'autogestion' %}#3b82f6{% elif val == 'conciencia_social' %}#10b981{% elif val == 'habilidades_relacionales' %}#8b5cf6{% elif val == 'toma_decisiones' %}#ef4444{% else %}#6366f1{% endif %};"></div>
+              <span>{{ label|truncatechars:32 }}</span>
+            </label>
+            {% endfor %}
+          </div>
+
+          <!-- ══ SECCIÓN 3: CANTIDAD DE DESEMPEÑOS ══ -->
+          <div class="form-section-title">
+            <i class="fa-solid fa-bullseye"></i>
+            Desempeños — <em style="font-style:italic;font-weight:600;letter-spacing:0;">¿Cuántos trabajarás este período?</em>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="display:flex;align-items:center;gap:0.4rem;">
+              <span class="field-num">4</span> Número de desempeños del período
+            </label>
+            <div class="d-flex gap-2 mb-2" id="numDesempeniosBtns">
+              <button type="button" class="num-desemp-btn active" data-n="1">1 desempeño</button>
+              <button type="button" class="num-desemp-btn" data-n="2">2 desempeños</button>
+              <button type="button" class="num-desemp-btn" data-n="3">3 desempeños</button>
+              <button type="button" class="num-desemp-btn" data-n="4">4 desempeños</button>
+            </div>
+            <input type="hidden" name="num_desempenios" id="numDesempenios" value="1">
+          </div>
+
+          <!-- ══ BLOQUES DE DESEMPEÑO (estáticos, JS solo muestra/oculta) ══ -->
+
+          <!-- ── DESEMPEÑO 1 (siempre visible) ── -->
+          <div id="desemp-block-1" class="desemp-block">
+            <div class="desemp-block-header">
+              <i class="fa-solid fa-bullseye"></i> Desempeño 1 — ¿Qué logrará el estudiante?
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Enunciado del desempeño 1 *</label>
+              <textarea class="form-control" name="desempenio_1" rows="3"
+                placeholder="Ej: Identifica y regula sus propias emociones en situaciones de conflicto, aplicando técnicas de comunicación asertiva para la resolución pacífica."></textarea>
+              <div class="form-text">Redacta lo que el estudiante será capaz de hacer. Kleit lo amplía y genera la estrategia completa.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Temas para trabajar 1 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los define)</span></label>
+              <textarea class="form-control" name="temas_trabajar_1" rows="2"
+                placeholder="Ej: Rueda de emociones, autorregulación, respiración consciente, comunicación no violenta..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Tipo de estrategia 1 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional)</span></label>
+              <select class="form-select" name="estrategia_tipo_1" style="font-size:0.82rem;">
+                <option value="">Kleit elige la más adecuada para el grado</option>
+                <option value="aprendizaje experiencial y vivencial">Aprendizaje experiencial y vivencial</option>
+                <option value="aprendizaje cooperativo">Aprendizaje cooperativo</option>
+                <option value="aprendizaje basado en proyectos socioemocionales">Aprendizaje basado en proyectos</option>
+                <option value="círculos de diálogo socioemocional">Círculos de diálogo socioemocional</option>
+                <option value="rutinas de pensamiento y reflexión">Rutinas de pensamiento y reflexión</option>
+                <option value="enseñanza directa con práctica guiada">Enseñanza directa con práctica guiada</option>
+                <option value="aula invertida con reflexión grupal">Aula invertida con reflexión grupal</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Criterios de valoración continua 1 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los genera)</span></label>
+              <textarea class="form-control" name="valoracion_notas_1" rows="2"
+                placeholder="Ej: Talleres en clase, portafolio emocional, participación activa, actitud para el aprendizaje..."></textarea>
+            </div>
+          </div>
+
+          <!-- ── DESEMPEÑO 2 (oculto por defecto) ── -->
+          <div id="desemp-block-2" class="desemp-block" style="display:none;">
+            <div class="desemp-block-header">
+              <i class="fa-solid fa-bullseye"></i> Desempeño 2 — ¿Qué logrará el estudiante?
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Enunciado del desempeño 2</label>
+              <textarea class="form-control" name="desempenio_2" rows="3"
+                placeholder="Ej: Reconoce las emociones de sus compañeros, practica la escucha activa y aplica estrategias de empatía en situaciones cotidianas."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Temas para trabajar 2 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los define)</span></label>
+              <textarea class="form-control" name="temas_trabajar_2" rows="2"
+                placeholder="Ej: Empatía, escucha activa, comunicación asertiva..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Tipo de estrategia 2 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional)</span></label>
+              <select class="form-select" name="estrategia_tipo_2" style="font-size:0.82rem;">
+                <option value="">Kleit elige la más adecuada para el grado</option>
+                <option value="aprendizaje experiencial y vivencial">Aprendizaje experiencial y vivencial</option>
+                <option value="aprendizaje cooperativo">Aprendizaje cooperativo</option>
+                <option value="aprendizaje basado en proyectos socioemocionales">Aprendizaje basado en proyectos</option>
+                <option value="círculos de diálogo socioemocional">Círculos de diálogo socioemocional</option>
+                <option value="rutinas de pensamiento y reflexión">Rutinas de pensamiento y reflexión</option>
+                <option value="enseñanza directa con práctica guiada">Enseñanza directa con práctica guiada</option>
+                <option value="aula invertida con reflexión grupal">Aula invertida con reflexión grupal</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Criterios de valoración continua 2 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los genera)</span></label>
+              <textarea class="form-control" name="valoracion_notas_2" rows="2"
+                placeholder="Ej: Talleres en clase, portafolio emocional, participación activa, actitud para el aprendizaje..."></textarea>
+            </div>
+          </div>
+
+          <!-- ── DESEMPEÑO 3 (oculto por defecto) ── -->
+          <div id="desemp-block-3" class="desemp-block" style="display:none;">
+            <div class="desemp-block-header">
+              <i class="fa-solid fa-bullseye"></i> Desempeño 3 — ¿Qué logrará el estudiante?
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Enunciado del desempeño 3</label>
+              <textarea class="form-control" name="desempenio_3" rows="3"
+                placeholder="Ej: Toma decisiones responsables considerando el impacto en sí mismo y en su comunidad, practicando el pensamiento crítico socioemocional."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Temas para trabajar 3 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los define)</span></label>
+              <textarea class="form-control" name="temas_trabajar_3" rows="2"
+                placeholder="Ej: Toma de decisiones, pensamiento crítico, responsabilidad..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Tipo de estrategia 3 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional)</span></label>
+              <select class="form-select" name="estrategia_tipo_3" style="font-size:0.82rem;">
+                <option value="">Kleit elige la más adecuada para el grado</option>
+                <option value="aprendizaje experiencial y vivencial">Aprendizaje experiencial y vivencial</option>
+                <option value="aprendizaje cooperativo">Aprendizaje cooperativo</option>
+                <option value="aprendizaje basado en proyectos socioemocionales">Aprendizaje basado en proyectos</option>
+                <option value="círculos de diálogo socioemocional">Círculos de diálogo socioemocional</option>
+                <option value="rutinas de pensamiento y reflexión">Rutinas de pensamiento y reflexión</option>
+                <option value="enseñanza directa con práctica guiada">Enseñanza directa con práctica guiada</option>
+                <option value="aula invertida con reflexión grupal">Aula invertida con reflexión grupal</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Criterios de valoración continua 3 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los genera)</span></label>
+              <textarea class="form-control" name="valoracion_notas_3" rows="2"
+                placeholder="Ej: Talleres en clase, portafolio emocional, participación activa, actitud para el aprendizaje..."></textarea>
+            </div>
+          </div>
+
+          <!-- ── DESEMPEÑO 4 (oculto por defecto) ── -->
+          <div id="desemp-block-4" class="desemp-block" style="display:none;">
+            <div class="desemp-block-header">
+              <i class="fa-solid fa-bullseye"></i> Desempeño 4 — ¿Qué logrará el estudiante?
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Enunciado del desempeño 4</label>
+              <textarea class="form-control" name="desempenio_4" rows="3"
+                placeholder="Ej: Fortalece hábitos de bienestar integral integrando prácticas de mindfulness, actividad física y cuidado de la salud mental."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Temas para trabajar 4 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los define)</span></label>
+              <textarea class="form-control" name="temas_trabajar_4" rows="2"
+                placeholder="Ej: Bienestar, mindfulness, hábitos saludables, salud mental..."></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Tipo de estrategia 4 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional)</span></label>
+              <select class="form-select" name="estrategia_tipo_4" style="font-size:0.82rem;">
+                <option value="">Kleit elige la más adecuada para el grado</option>
+                <option value="aprendizaje experiencial y vivencial">Aprendizaje experiencial y vivencial</option>
+                <option value="aprendizaje cooperativo">Aprendizaje cooperativo</option>
+                <option value="aprendizaje basado en proyectos socioemocionales">Aprendizaje basado en proyectos</option>
+                <option value="círculos de diálogo socioemocional">Círculos de diálogo socioemocional</option>
+                <option value="rutinas de pensamiento y reflexión">Rutinas de pensamiento y reflexión</option>
+                <option value="enseñanza directa con práctica guiada">Enseñanza directa con práctica guiada</option>
+                <option value="aula invertida con reflexión grupal">Aula invertida con reflexión grupal</option>
+              </select>
+            </div>
+            <div class="mb-2">
+              <label class="form-label" style="font-size:0.78rem;font-weight:800;">Criterios de valoración continua 4 <span style="font-weight:400;font-size:0.68rem;color:var(--text-muted);">(opcional — Kleit los genera)</span></label>
+              <textarea class="form-control" name="valoracion_notas_4" rows="2"
+                placeholder="Ej: Talleres en clase, portafolio emocional, participación activa, actitud para el aprendizaje..."></textarea>
+            </div>
+          </div>
+
+          <!-- Kleit generará -->
+          <div style="background:rgba(106,128,226,0.07);border:1.5px solid rgba(106,128,226,0.2);border-radius:12px;padding:0.8rem 1rem;margin-bottom:1.2rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;font-weight:800;color:var(--blue1);margin-bottom:0.4rem;">
+              <i class="fa-solid fa-robot" style="color:var(--blue2);"></i> Kleit completará automáticamente:
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-muted);display:grid;grid-template-columns:1fr 1fr;gap:0.2rem 0.8rem;">
+              <span><i class="fa-solid fa-check" style="color:var(--success);margin-right:0.2rem;"></i>Temas detallados por semanas</span>
+              <span><i class="fa-solid fa-check" style="color:var(--success);margin-right:0.2rem;"></i>Estrategia de aprendizaje completa</span>
+              <span><i class="fa-solid fa-check" style="color:var(--success);margin-right:0.2rem;"></i>Valoración continua adaptada</span>
+              <span><i class="fa-solid fa-check" style="color:var(--success);margin-right:0.2rem;"></i>Rúbrica: Superior / Alto / Básico</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-kiwi btn-kiwi-primary w-100 justify-content-center"
+            style="padding:0.8rem;font-size:0.88rem;" id="submitBtn">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Generar plan con Kleit IA
+          </button>
+
+          <div id="formError" style="display:none;margin-top:0.65rem;padding:0.6rem 0.85rem;background:rgba(239,68,68,0.1);border:1.5px solid rgba(239,68,68,0.3);border-radius:10px;font-size:0.78rem;color:var(--danger);">
+            <i class="fa-solid fa-triangle-exclamation" style="margin-right:0.3rem;"></i>
+            <span id="formErrorMsg"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SIDEBAR ══ -->
+  <div class="col-lg-5">
+
+    <!-- Stats -->
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <div class="stat-card" style="padding:0.85rem 1rem;">
+          <div class="stat-num" style="font-size:1.7rem;">{{ planes|length }}</div>
+          <div class="stat-label">Planes creados</div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="stat-card" style="padding:0.85rem 1rem;border-top-color:#7c3aed;">
+          <div class="stat-num" style="font-size:1.7rem;color:#7c3aed;">{{ planes|length }}</div>
+          <div class="stat-label">Documentos activos</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de planes -->
+    <div class="kiwi-card mb-3">
+      <div class="kiwi-card-header">
+        <h5 class="kiwi-card-title"><i class="fa-solid fa-folder-open"></i> Mis planes</h5>
+      </div>
+      <div style="padding:0.7rem;">
+        {% if planes %}
+        <div class="plan-list">
+          {% for plan in planes %}
+          <a href="/plan-aula/{{ plan.pk }}/" class="plan-item">
+            <div class="plan-item-icon {% if plan.tipo == 'pensum' %}icon-pensum{% else %}icon-plan{% endif %}">
+              <i class="fa-solid fa-{% if plan.tipo == 'pensum' %}graduation-cap{% else %}file-lines{% endif %}"></i>
+            </div>
+            <div class="plan-item-info">
+              <div class="plan-item-title">{{ plan.titulo }}</div>
+              <div class="plan-item-meta">
+                <span class="kiwi-badge badge-blue">{{ plan.get_grado_display }}</span>
+                <span class="kiwi-badge badge-purple">{{ plan.ciclo }}</span>
+                {% if plan.periodo %}<span class="kiwi-badge" style="background:rgba(16,185,129,0.12);color:#059669;">Per. {{ plan.periodo }}</span>{% endif %}
+              </div>
+              <div style="font-size:0.67rem;color:var(--text-muted);margin-top:0.15rem;">
+                <i class="fa-regular fa-calendar" style="font-size:0.6rem;"></i>
+                {{ plan.created_at|date:"d/m/Y" }}
+              </div>
+            </div>
+            <div onclick="event.preventDefault();">
+              <a href="/plan-aula/eliminar/{{ plan.pk }}/"
+                class="btn-kiwi btn-kiwi-xs btn-kiwi-danger"
+                onclick="return confirm('¿Eliminar este plan?')">
+                <i class="fa-solid fa-trash"></i>
+              </a>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="plan-empty">
+          <i class="fa-solid fa-file-lines" style="font-size:2.5rem;color:var(--blue2);opacity:0.35;display:block;margin-bottom:0.6rem;"></i>
+          <h4 style="font-size:0.9rem;font-weight:900;margin-bottom:0.3rem;">Sin planes todavía</h4>
+          <p style="font-size:0.77rem;color:var(--text-muted);margin:0;">Usa el formulario para generar tu primer plan con Kleit IA</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+
+  </div><!-- /col sidebar -->
+</div><!-- /row -->
+
+{% endblock %}{% endwith %}
+{% block extra_js %}
+<script>
+/* ── Grado ── */
+function selectGrado(val, el) {
+  document.querySelectorAll('.grado-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('gradoHidden').value = val;
+  document.getElementById('gradoError').style.display = 'none';
+}
+/* ── SEL ── */
+function updateSelUI() {} // handled by :has(input:checked)
+
+/* ── MOSTRAR / OCULTAR BLOQUES DE DESEMPEÑO ── */
+function updateDesempeniosVisibility(n) {
+  for (var j = 1; j <= 4; j++) {
+    var blk = document.getElementById('desemp-block-' + j);
+    if (blk) blk.style.display = j <= n ? '' : 'none';
+  }
+  document.getElementById('numDesempenios').value = n;
+  buildGenSteps(n);
+}
+
+/* ── SELECTOR DE CANTIDAD ── */
+document.getElementById('numDesempeniosBtns').addEventListener('click', function(e) {
+  var btn = e.target.closest('.num-desemp-btn');
+  if (!btn) return;
+  document.querySelectorAll('.num-desemp-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  updateDesempeniosVisibility(parseInt(btn.dataset.n));
+});
+
+/* ── STEPS OVERLAY (dinámicos según cantidad de desempeños) ── */
+var GEN_STEPS = [];
+function buildGenSteps(n) {
+  var step = Math.round(100 / (n * 3 + 1));
+  GEN_STEPS = [{ icon:'fa-graduation-cap', text:'Analizando grado y ciclo educativo', pct: step }];
+  var pct = step;
+  for (var i = 1; i <= n; i++) {
+    var lbl = n > 1 ? ' del desempeño ' + i : '';
+    pct = Math.min(95, pct + step); GEN_STEPS.push({ icon:'fa-book-open',          text:'Desarrollando temas' + lbl,   pct: pct });
+    pct = Math.min(95, pct + step); GEN_STEPS.push({ icon:'fa-chalkboard-teacher', text:'Redactando estrategia' + lbl, pct: pct });
+    pct = Math.min(95, pct + step); GEN_STEPS.push({ icon:'fa-chart-bar',          text:'Construyendo rúbrica' + lbl,  pct: pct });
+  }
+}
+buildGenSteps(1);
+
+let _sIdx=0, _sTimer=null;
+function showLoadingOverlay() {
+  document.getElementById('kiwi-gen-overlay').style.display = 'flex';
+  document.getElementById('genChips').innerHTML = '';
+  document.getElementById('genErrorBox').style.display = 'none';
+  _sIdx = 0; _advanceStep();
+  _sTimer = setInterval(() => { if (_sIdx < GEN_STEPS.length-1) { _sIdx++; _advanceStep(); } }, 13000);
+}
+function _advanceStep() {
+  const s = GEN_STEPS[_sIdx];
+  const el = document.getElementById('genStepText');
+  el.style.opacity='0';
+  setTimeout(()=>{
+    el.innerHTML = `<i class="fa-solid ${s.icon}" style="margin-right:0.4rem;"></i>${s.text}...`;
+    el.style.opacity='1';
+    document.getElementById('genBar').style.width = s.pct+'%';
+    document.getElementById('genPct').textContent = s.pct+'%';
+    if (_sIdx>0) {
+      const chip=document.createElement('span');
+      chip.className='gen-chip';
+      chip.innerHTML=`<i class="fa-solid fa-check" style="margin-right:0.2rem;color:#4ade80;"></i>${GEN_STEPS[_sIdx-1].text}`;
+      document.getElementById('genChips').appendChild(chip);
+    }
+  },200);
+}
+function showSuccessStep() {
+  clearInterval(_sTimer);
+  document.getElementById('genStepText').innerHTML='<i class="fa-solid fa-circle-check" style="margin-right:0.4rem;color:#4ade80;"></i>Plan generado y guardado exitosamente';
+  document.getElementById('genBar').style.width='100%';
+  document.getElementById('genPct').textContent='100%';
+  const ic=document.getElementById('genIcon');
+  ic.className='fa-solid fa-circle-check'; ic.style.color='#4ade80';
+}
+function showGenError(msg) {
+  clearInterval(_sTimer);
+  document.getElementById('genErrorMsg').textContent=msg;
+  document.getElementById('genErrorBox').style.display='block';
+  document.getElementById('genStepText').innerHTML='<i class="fa-solid fa-triangle-exclamation" style="color:#fca5a5;margin-right:0.4rem;"></i>Error en la generación';
+}
+function hideOverlay() {
+  clearInterval(_sTimer);
+  document.getElementById('kiwi-gen-overlay').style.display='none';
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=false;
+  btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> Generar plan con Kleit IA';
+}
+
+/* ── AJAX SUBMIT ── */
+document.getElementById('planForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  if (!document.getElementById('gradoHidden').value) {
+    document.getElementById('gradoError').style.display='block';
+    document.getElementById('gradoGrid').scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  // Validate at least the first desempeño
+  const firstDesemp = document.querySelector('[name="desempenio_1"]');
+  if (!firstDesemp || !firstDesemp.value.trim()) {
+    document.getElementById('formErrorMsg').textContent='Escribe al menos el enunciado del primer desempeño.';
+    document.getElementById('formError').style.display='block';
+    firstDesemp && firstDesemp.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  document.getElementById('formError').style.display='none';
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;
+  btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Generando...';
+  showLoadingOverlay();
+
+  const controller=new AbortController();
+  const tout=setTimeout(()=>controller.abort(), 175000);
+
+  fetch('/plan-aula/generar/',{
+    method:'POST', body:new FormData(this),
+    headers:{'X-Requested-With':'XMLHttpRequest'},
+    signal:controller.signal
+  })
+  .then(r=>{ clearTimeout(tout); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(data=>{
+    if(data.ok && data.plan_id){
+      showSuccessStep();
+      setTimeout(()=>{ window.location.href = data.redirect||`/plan-aula/${data.plan_id}/`; },1200);
+    } else {
+      hideOverlay();
+      document.getElementById('formErrorMsg').textContent=data.error||'Error al generar el plan.';
+      document.getElementById('formError').style.display='block';
+    }
+  })
+  .catch(err=>{
+    clearTimeout(tout);
+    if(err.name==='AbortError'){
+      showGenError('La generación tardó demasiado. Si el plan fue guardado, aparecerá en "Mis planes". Recarga la página para verlo.');
+    } else {
+      showGenError('Error de conexión. Verifica tu red e intenta de nuevo.');
+    }
+    btn.disabled=false;
+    btn.innerHTML='<i class="fa-solid fa-wand-magic-sparkles"></i> Generar plan con Kleit IA';
+  });
+});
+</script>
+{% endblock %}

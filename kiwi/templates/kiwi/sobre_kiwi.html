@@ -1,0 +1,177 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sobre KIWI — Tu aula emocional</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--blue1:#35458f;--blue2:#6a80e2;--blue3:#122666;--white:#fff;--text:#111;--surface:#f6f8ff;--border:#e0e6f5;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#fff;color:var(--text);}
+
+/* NAV */
+nav{display:flex;align-items:center;padding:0 3rem;height:72px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:0.6rem;text-decoration:none;color:var(--blue3);}
+.nav-logo strong{font-family:'Space Grotesk';font-size:1.4rem;font-weight:700;letter-spacing:3px;}
+.nav-links{display:flex;gap:2.5rem;margin:0 3rem;}
+.nav-links a{text-decoration:none;color:var(--text);font-size:0.9rem;font-weight:600;transition:color 0.2s;}
+.nav-links a:hover{color:var(--blue2);}
+.nav-links a.active{color:var(--blue2);}
+.nav-btns{margin-left:auto;display:flex;gap:0.75rem;}
+.btn-login{padding:0.55rem 1.4rem;border-radius:25px;font-weight:700;font-size:0.875rem;cursor:pointer;text-decoration:none;transition:all 0.2s;font-family:'Nunito',sans-serif;}
+.btn-login.outline{border:2px solid var(--blue3);color:var(--blue3);background:transparent;}
+.btn-login.outline:hover{background:var(--blue3);color:white;}
+.btn-login.filled{background:var(--blue3);color:white;border:2px solid var(--blue3);}
+.btn-login.filled:hover{background:var(--blue1);}
+
+/* HERO */
+.page-hero{
+  background:linear-gradient(135deg,var(--blue3) 0%,var(--blue1) 60%,var(--blue2) 100%);
+  padding:5rem 3rem 4rem;
+  text-align:center;
+  color:#fff;
+}
+.page-hero .badge{
+  display:inline-block;background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.3);border-radius:20px;
+  padding:0.35rem 1rem;font-size:0.8rem;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1.5rem;
+}
+.page-hero h1{font-size:3rem;font-weight:900;line-height:1.15;margin-bottom:1rem;}
+.page-hero h1 span{color:#a5b8ff;}
+.page-hero p{font-size:1.05rem;opacity:0.85;max-width:560px;margin:0 auto;line-height:1.7;}
+
+/* CONTENT */
+.content{max-width:1100px;margin:0 auto;padding:4rem 2rem 6rem;}
+
+/* SECTION TITLE */
+.section-title{
+  text-align:center;margin-bottom:3rem;
+}
+.section-title h2{font-size:1.9rem;font-weight:800;color:var(--blue3);margin-bottom:0.5rem;}
+.section-title p{color:#666;font-size:0.95rem;max-width:500px;margin:0 auto;}
+
+/* FEATURE CARDS */
+.features-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:4rem;
+}
+@media(max-width:700px){.features-grid{grid-template-columns:1fr;}}
+
+.feature-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;transition:box-shadow 0.2s,transform 0.2s;
+}
+.feature-card:hover{box-shadow:0 8px 32px rgba(53,69,143,0.12);transform:translateY(-3px);}
+.feature-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;margin-bottom:1.25rem;
+}
+.icon-blue{background:#dde6ff;color:#35458f;}
+.icon-green{background:#d6f5e3;color:#15803d;}
+.icon-orange{background:#fff0d6;color:#b45309;}
+.icon-purple{background:#ede4ff;color:#6d28d9;}
+.feature-card h3{font-size:1.1rem;font-weight:800;color:var(--blue3);margin-bottom:0.6rem;}
+.feature-card p{font-size:0.9rem;color:#555;line-height:1.7;}
+
+/* HIGHLIGHT BLOCK */
+.highlight-block{
+  background:linear-gradient(135deg,var(--blue3),var(--blue1));
+  border-radius:20px;padding:3rem;color:#fff;text-align:center;
+}
+.highlight-block h2{font-size:1.8rem;font-weight:800;margin-bottom:0.75rem;}
+.highlight-block p{opacity:0.85;font-size:0.95rem;max-width:480px;margin:0 auto 2rem;}
+.highlight-block a{
+  display:inline-block;background:#fff;color:var(--blue3);
+  padding:0.75rem 2rem;border-radius:25px;font-weight:800;font-size:0.9rem;text-decoration:none;transition:opacity 0.2s;
+}
+.highlight-block a:hover{opacity:0.9;}
+
+/* DIVIDER */
+.section-divider{
+  display:flex;align-items:center;gap:1rem;margin:3rem 0;color:#bbb;font-size:0.85rem;
+}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="{% static 'kiwi/img/Logokiwi.png' %}" alt="KIWI Logo" style="width:48px;height:48px;object-fit:contain;">
+    <strong>KIWI</strong>
+  </a>
+  <div class="nav-links">
+    <a href="/">Inicio</a>
+    <a href="/sobre-kiwi/" class="active">Sobre KIWI</a>
+    <a href="/sobre-kleit/">Sobre nuestra IA &ldquo;Kleit&rdquo;</a>
+  </div>
+  <div class="nav-btns">
+    <a href="/login/" class="btn-login outline">Iniciar Sesión</a>
+    <a href="/registro/" class="btn-login filled">Registrarse</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="badge">La plataforma docente</div>
+  <h1>KIWI en todo su <span>potencial</span></h1>
+  <p>Diseñado para que los docentes puedan planificar, organizar y acompañar sus clases desde un solo lugar, con orden y con calma.</p>
+</div>
+
+<div class="content">
+
+  <!-- PLANIFICACIÓN -->
+  <div class="section-title">
+    <h2>Planificación y Organización Inteligente</h2>
+    <p>Todo lo que necesitas para preparar tus clases sin perder tiempo ni energía.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon icon-blue"><i class="fa-solid fa-clipboard-list"></i></div>
+      <h3>Planner de clases con plantillas</h3>
+      <p>Crea, guarda y estructura todas las planeaciones de la materia con plantillas personalizadas. Organiza tu semana de manera visual e intuitiva.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-green"><i class="fa-solid fa-list-check"></i></div>
+      <h3>Checklist de materiales</h3>
+      <p>Lleva un registro claro de los materiales y recursos que necesitas para cada sesión. Nunca más olvidar nada importante antes de clase.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-orange"><i class="fa-solid fa-calendar-days"></i></div>
+      <h3>Calendario inteligente</h3>
+      <p>Integra la organización de tus clases con recordatorios automáticos de actividades y fechas institucionales relevantes.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-purple"><i class="fa-solid fa-bell"></i></div>
+      <h3>Recordatorios automáticos</h3>
+      <p>Recibe alertas oportunas de clases próximas, entregas y eventos importantes para que siempre estés un paso adelante.</p>
+    </div>
+  </div>
+
+  <div class="section-divider">Recursos y Bienestar</div>
+
+  <!-- RECURSOS -->
+  <div class="section-title">
+    <h2>Recursos, Herramientas y Bienestar Personal</h2>
+    <p>Porque un docente que cuida su bienestar, cuida mejor a sus estudiantes.</p>
+  </div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon icon-blue"><i class="fa-solid fa-book-open"></i></div>
+      <h3>Biblioteca de recursos docentes</h3>
+      <p>Accede a un repositorio organizado de dinámicas, videos y lecturas especializadas en educación socioemocional. Clasifica y encuentra lo que necesitas en segundos.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon icon-green"><i class="fa-solid fa-magnifying-glass"></i></div>
+      <h3>Buscador interno inteligente</h3>
+      <p>Filtra y encuentra recursos pedagógicos de manera eficiente con nuestro buscador interno diseñado para docentes.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

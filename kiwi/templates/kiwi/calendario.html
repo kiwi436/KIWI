@@ -1,0 +1,813 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| Calendario{% endblock %}
+{% block topbar_icon %}calendar-days{% endblock %}
+{% block topbar_title %}Calendario{% endblock %}
+{% with active='calendario' %}
+{% block content %}
+
+<style>
+/* ── LAYOUT ── */
+.cal-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.cal-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.cal-week-main {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* ── MINI CALENDAR ── */
+.mini-cal-wrap {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 1rem;
+}
+.mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+.mini-cal-title { font-size: 0.8rem; font-weight: 800; color: var(--text); }
+.mini-nav-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 0.7rem;
+  padding: 0.25rem 0.45rem; border-radius: 6px;
+  transition: all var(--transition);
+}
+.mini-nav-btn:hover { background: var(--blue-bg); color: var(--blue2); }
+.mini-cal-dow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 0.2rem;
+}
+.mini-dow-label {
+  text-align: center; font-size: 0.58rem; font-weight: 800;
+  color: var(--text-muted); text-transform: uppercase; padding: 0.15rem 0;
+}
+.mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+.mini-day-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.mini-cal-day {
+  text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--text);
+  border-radius: 50%; cursor: pointer; transition: all var(--transition);
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 1px auto;
+}
+.mini-cal-day:hover { background: var(--blue-bg); color: var(--blue1); }
+.mini-cal-day.other-month { color: var(--border); cursor: default; }
+.mini-cal-day.other-month:hover { background: none; color: var(--border); }
+.mini-cal-day.today { background: var(--blue2); color: white; font-weight: 900; }
+.mini-cal-day.today:hover { background: var(--blue1); }
+.mini-cal-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--blue2); margin-top: 1px;
+}
+.mini-cal-day.today ~ .mini-cal-dot { background: var(--blue2); }
+
+/* ── SIDE SECTIONS ── */
+.side-section {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.side-section-title {
+  font-size: 0.68rem; font-weight: 800; color: var(--blue1);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  padding: 0.7rem 1rem; border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+[data-theme="dark"] .side-section-title { color: var(--blue2); }
+.side-class-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem 1rem; border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.side-class-item:last-child { border-bottom: none; }
+.side-class-item:hover { background: var(--blue-bg); }
+.side-class-time {
+  font-size: 0.65rem; font-weight: 800; color: var(--blue2);
+  min-width: 30px; flex-shrink: 0;
+}
+.side-class-info { flex: 1; min-width: 0; }
+.side-class-name {
+  font-size: 0.76rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.side-empty {
+  padding: 0.9rem 1rem; text-align: center;
+  font-size: 0.75rem; color: var(--text-muted); font-style: italic;
+}
+
+/* ── WEEK NAVIGATION ── */
+.week-nav {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1rem 1.25rem; border-bottom: 1.5px solid var(--border);
+}
+.week-nav-btns { display: flex; gap: 0.35rem; align-items: center; }
+.week-title { font-size: 0.88rem; font-weight: 800; color: var(--text); flex: 1; }
+
+/* ── WEEK GRID — TIME-BASED ── */
+.week-headers-row {
+  display: flex;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+.week-time-spacer {
+  width: 46px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--blue-bg);
+}
+.week-col-header {
+  flex: 1; padding: 0.7rem 0.3rem 0.55rem; text-align: center;
+  border-right: 1px solid var(--border);
+  background: var(--blue-bg);
+}
+.week-col-header:last-child { border-right: none; }
+.week-col-header.today { background: rgba(106,128,226,0.1); }
+.week-day-name {
+  font-size: 0.58rem; font-weight: 800; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.3rem;
+}
+.week-col-header.today .week-day-name { color: var(--blue2); }
+.week-day-num {
+  font-size: 1rem; font-weight: 900; color: var(--text);
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin: 0 auto;
+}
+.week-col-header.today .week-day-num { background: var(--blue2); color: white; }
+.week-body-scroll {
+  display: flex;
+  overflow-y: auto;
+  max-height: 520px;
+}
+.week-time-col {
+  width: 46px; flex-shrink: 0; position: relative;
+  border-right: 1px solid var(--border);
+  background: var(--blue-bg);
+}
+.week-time-label {
+  position: absolute; right: 5px;
+  font-size: 0.58rem; font-weight: 700; color: var(--text-muted);
+  transform: translateY(-50%); white-space: nowrap; user-select: none;
+}
+.week-days-grid {
+  flex: 1; display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  position: relative;
+}
+.week-day-body {
+  border-right: 1px solid var(--border);
+  position: relative; cursor: pointer;
+  transition: background var(--transition);
+}
+.week-day-body:last-child { border-right: none; }
+.week-day-body:hover { background: rgba(106,128,226,0.03); }
+.week-day-body.today { background: rgba(106,128,226,0.04); }
+.week-hour-line {
+  position: absolute; left: 0; right: 0; pointer-events: none;
+  border-top: 1px solid var(--border);
+}
+.week-hour-line.half {
+  border-top-style: dashed; opacity: 0.45;
+}
+.clase-chip-timed {
+  position: absolute; left: 3px; right: 3px;
+  background: rgba(106,128,226,0.14); border-left: 3px solid var(--blue2);
+  border-radius: 5px; padding: 0.18rem 0.35rem;
+  overflow: hidden; cursor: pointer; z-index: 1;
+  transition: background var(--transition);
+  display: flex; flex-direction: column; gap: 1px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.clase-chip-timed:hover { background: rgba(106,128,226,0.26); }
+.clase-chip-timed.done {
+  background: rgba(34,197,94,0.12); border-left-color: #22c55e;
+}
+.clase-chip-timed.done:hover { background: rgba(34,197,94,0.22); }
+[data-theme="dark"] .clase-chip-timed { box-shadow: none; }
+.chip-time {
+  font-size: 0.55rem; font-weight: 900; opacity: 0.72;
+  color: var(--blue2); line-height: 1;
+}
+.chip-title {
+  font-size: 0.63rem; font-weight: 700; color: var(--blue1);
+  line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chip-grupo {
+  font-size: 0.55rem; font-weight: 600; color: var(--text-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.clase-chip-timed.done .chip-title { color: #15803d; }
+[data-theme="dark"] .clase-chip-timed .chip-title { color: var(--blue2); }
+[data-theme="dark"] .clase-chip-timed.done .chip-title { color: #4ade80; }
+
+/* ── DAY DETAIL MODAL ── */
+.day-clase-card {
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 0.9rem 1rem; margin-bottom: 0.65rem;
+}
+.day-clase-card:last-child { margin-bottom: 0; }
+.day-clase-top {
+  display: flex; align-items: flex-start; gap: 0.7rem; margin-bottom: 0.65rem;
+}
+.day-clase-time {
+  font-size: 0.7rem; font-weight: 800; color: var(--blue2);
+  padding-top: 3px; min-width: 34px; flex-shrink: 0;
+}
+.day-clase-title { font-size: 0.88rem; font-weight: 800; color: var(--text); margin-bottom: 0.2rem; }
+.day-clase-meta {
+  font-size: 0.72rem; color: var(--text-muted);
+  display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
+}
+.day-clase-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+
+/* ── NUEVA CLASE FORM ── */
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.recurrencia-box {
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 0.85rem; margin-top: 0.5rem; display: none;
+}
+.recurrencia-box.show { display: block; }
+
+/* ── GOOGLE BANNER ── */
+.gcal-banner {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+  padding: 0.7rem 1rem; border-radius: var(--radius);
+  border: 1.5px solid var(--border); margin-bottom: 1.25rem;
+  font-size: 0.82rem; font-weight: 700;
+}
+.gcal-banner.connected { background: rgba(34,197,94,0.06); border-color: rgba(34,197,94,0.3); }
+.gcal-banner.disconnected { background: var(--surface); border-style: dashed; }
+
+@media (max-width: 900px) {
+  .cal-layout { flex-direction: column; }
+  .cal-sidebar { width: 100%; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+</style>
+
+<!-- Google Calendar Banner -->
+{% if google_conectado %}
+<div class="gcal-banner connected">
+  <i class="fa-brands fa-google" style="color:#22c55e;font-size:1rem;"></i>
+  <span style="flex:1;color:var(--text);">Google Calendar conectado</span>
+  <span class="kiwi-badge badge-green"><i class="fa-solid fa-circle" style="font-size:0.4rem;"></i> Activo</span>
+  <a href="/calendario/google/sync-todas/" class="btn-kiwi btn-kiwi-blue btn-kiwi-sm">
+    <i class="fa-solid fa-arrows-rotate"></i> Sincronizar
+  </a>
+  <a href="/calendario/google/desconectar/" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">Desconectar</a>
+</div>
+{% else %}
+<div class="gcal-banner disconnected">
+  <i class="fa-brands fa-google" style="color:var(--text-muted);font-size:1rem;"></i>
+  <span style="flex:1;color:var(--text-muted);">Conecta Google Calendar para sincronizar tus clases</span>
+  <a href="/calendario/google/conectar/" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+    <i class="fa-solid fa-plug"></i> Conectar
+  </a>
+</div>
+{% endif %}
+
+<!-- TWO-COLUMN LAYOUT -->
+<div class="cal-layout">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div class="cal-sidebar">
+
+    <button onclick="openNuevaClaseModal()" class="btn-kiwi btn-kiwi-blue"
+            style="width:100%;justify-content:center;padding:0.75rem 1rem;font-size:0.86rem;border-radius:var(--radius-lg);">
+      <i class="fa-solid fa-plus"></i> Nueva clase
+    </button>
+
+    <!-- Mini month calendar -->
+    <div class="mini-cal-wrap">
+      <div class="mini-cal-header">
+        <button class="mini-nav-btn" onclick="changeMiniMonth(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <span class="mini-cal-title" id="miniCalTitle"></span>
+        <button class="mini-nav-btn" onclick="changeMiniMonth(1)"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+      <div class="mini-cal-dow">
+        <div class="mini-dow-label">L</div>
+        <div class="mini-dow-label">M</div>
+        <div class="mini-dow-label">X</div>
+        <div class="mini-dow-label">J</div>
+        <div class="mini-dow-label">V</div>
+        <div class="mini-dow-label">S</div>
+        <div class="mini-dow-label">D</div>
+      </div>
+      <div class="mini-cal-grid" id="miniCalGrid"></div>
+    </div>
+
+    <!-- Clases de hoy -->
+    <div class="side-section">
+      <div class="side-section-title">
+        <i class="fa-solid fa-sun"></i> Clases de hoy
+      </div>
+      {% if clases_hoy %}
+        {% for c in clases_hoy %}
+        <div class="side-class-item">
+          <span class="side-class-time">{{ c.fecha|date:"H:i" }}</span>
+          <div class="side-class-info">
+            <div class="side-class-name">{{ c.titulo|truncatechars:23 }}</div>
+            <span class="kiwi-badge badge-blue" style="font-size:0.58rem;margin-top:0.1rem;">{{ c.grupo }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="side-empty">Sin clases hoy</div>
+      {% endif %}
+    </div>
+
+    <!-- Próximas clases -->
+    <div class="side-section">
+      <div class="side-section-title">
+        <i class="fa-solid fa-clock"></i> Próximas clases
+      </div>
+      {% if proximas %}
+        {% for c in proximas %}
+        <div class="side-class-item">
+          <span class="side-class-time">{{ c.fecha|date:"d/m" }}</span>
+          <div class="side-class-info">
+            <div class="side-class-name">{{ c.titulo|truncatechars:23 }}</div>
+            {% if c.es_recurrente %}
+            <span class="kiwi-badge badge-yellow" style="font-size:0.58rem;margin-top:0.1rem;">
+              <i class="fa-solid fa-rotate" style="font-size:0.5rem;"></i> Recurrente
+            </span>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="side-empty">Sin próximas clases</div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ── WEEK CALENDAR ── -->
+  <div class="cal-week-main">
+    <div class="week-nav">
+      <div class="week-nav-btns">
+        <button onclick="changeWeek(-1)" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button onclick="goToday()" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">Hoy</button>
+        <button onclick="changeWeek(1)" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+      <span id="weekTitle" class="week-title"></span>
+    </div>
+    <div class="week-headers-row" id="weekHeadersRow">
+      <div class="week-time-spacer"></div>
+    </div>
+    <div class="week-body-scroll">
+      <div class="week-time-col" id="weekTimeCol"></div>
+      <div class="week-days-grid" id="weekDaysGrid"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MODAL: Nueva Clase ── -->
+<div class="kiwi-modal-overlay" id="nuevaClaseOverlay" onclick="if(event.target===this)closeNuevaClaseModal()">
+  <div class="kiwi-modal" style="max-width:520px;max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h3 style="margin:0;font-size:1.05rem;">
+        <i class="fa-solid fa-calendar-plus" style="color:var(--blue2);margin-right:0.4rem;font-size:0.9rem;"></i>
+        Nueva clase
+      </h3>
+      <button onclick="closeNuevaClaseModal()"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);line-height:1;padding:0.2rem;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <form method="post" action="/calendario/" id="nuevaClaseForm">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="kiwi-form-label">Título de la clase *</label>
+        <input type="text" name="titulo" class="kiwi-input" placeholder="Ej: Inteligencia emocional" required>
+      </div>
+      <div class="form-grid-2 mb-3">
+        <div>
+          <label class="kiwi-form-label">Grupo *</label>
+          <select name="grupo" class="kiwi-input" required>
+            <option value="" disabled selected>Selecciona...</option>
+            <optgroup label="Primaria">
+              <option>1° Primaria</option>
+              <option>2° Primaria</option>
+              <option>3° Primaria</option>
+              <option>4° Primaria</option>
+              <option>5° Primaria</option>
+            </optgroup>
+            <optgroup label="Bachillerato">
+              <option>6° Bachillerato</option>
+              <option>7° Bachillerato</option>
+              <option>8° Bachillerato</option>
+              <option>9° Bachillerato</option>
+              <option>10° Bachillerato</option>
+              <option>11° Bachillerato</option>
+            </optgroup>
+          </select>
+        </div>
+        <div>
+          <label class="kiwi-form-label">Fecha y hora *</label>
+          <input type="datetime-local" name="fecha" id="fechaInput" class="kiwi-input" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Tema (opcional)</label>
+        <input type="text" name="tema" class="kiwi-input" placeholder="Ej: Manejo del estrés">
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Notas (opcional)</label>
+        <textarea name="notas" class="kiwi-input" rows="2" placeholder="Observaciones adicionales..."></textarea>
+      </div>
+      <div class="mb-3" style="display:flex;align-items:center;gap:0.6rem;">
+        <input type="checkbox" name="recordatorio" id="recordatorioCheck" checked
+               style="width:16px;height:16px;accent-color:var(--blue2);cursor:pointer;">
+        <label for="recordatorioCheck" style="font-size:0.82rem;font-weight:700;color:var(--text);margin:0;cursor:pointer;">
+          <i class="fa-solid fa-bell" style="color:var(--blue2);margin-right:0.2rem;font-size:0.78rem;"></i>
+          Recordatorio 15 min antes
+        </label>
+      </div>
+      <div class="mb-3">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.4rem;">
+          <input type="checkbox" name="es_recurrente" id="esRecurrenteCheck" onchange="toggleRecurrencia()"
+                 style="width:16px;height:16px;accent-color:var(--blue2);cursor:pointer;">
+          <label for="esRecurrenteCheck" style="font-size:0.82rem;font-weight:700;color:var(--text);margin:0;cursor:pointer;">
+            <i class="fa-solid fa-rotate" style="color:var(--blue2);margin-right:0.2rem;font-size:0.78rem;"></i>
+            Clase recurrente
+          </label>
+        </div>
+        <div class="recurrencia-box" id="recurrenciaSection">
+          <div class="form-grid-2" style="gap:0.6rem;margin-bottom:0.6rem;">
+            <div>
+              <label class="kiwi-form-label">Frecuencia</label>
+              <select name="frecuencia_semanas" class="kiwi-input" onchange="actualizarResumen()">
+                <option value="1">Semanal</option>
+                <option value="2">Quincenal</option>
+                <option value="4">Mensual</option>
+              </select>
+            </div>
+            <div>
+              <label class="kiwi-form-label">Duración</label>
+              <select name="duracion_meses" class="kiwi-input" onchange="actualizarResumen()">
+                <option value="3">3 meses</option>
+                <option value="6">6 meses</option>
+                <option value="8">8 meses</option>
+                <option value="10" selected>10 meses</option>
+                <option value="12">12 meses</option>
+              </select>
+            </div>
+          </div>
+          <div id="recurrResumenTexto"
+               style="font-size:0.74rem;color:var(--blue1);font-weight:700;background:rgba(106,128,226,0.1);border-radius:8px;padding:0.45rem 0.65rem;"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.65rem;justify-content:flex-end;padding-top:0.75rem;border-top:1.5px solid var(--border);margin-top:0.25rem;">
+        <button type="button" onclick="closeNuevaClaseModal()" class="btn-kiwi btn-kiwi-ghost">Cancelar</button>
+        <button type="submit" class="btn-kiwi btn-kiwi-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar clase
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL: Detalle del día ── -->
+<div class="kiwi-modal-overlay" id="dayDetailOverlay" onclick="if(event.target===this)closeDayModal()">
+  <div class="kiwi-modal" style="max-width:560px;max-height:84vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h3 style="margin:0;font-size:0.98rem;" id="dayDetailTitle"></h3>
+      <button onclick="closeDayModal()"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);line-height:1;padding:0.2rem;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div id="dayDetailContent"></div>
+  </div>
+</div>
+
+<!-- ── MODAL: Confirmar recurrencia ── -->
+<div class="kiwi-modal-overlay" id="recurrConfirmModal">
+  <div class="kiwi-modal" style="max-width:400px;text-align:center;">
+    <i class="fa-solid fa-rotate" style="font-size:1.8rem;color:var(--blue2);margin-bottom:0.65rem;display:block;"></i>
+    <h3 style="margin-bottom:0.35rem;">¿Crear clases recurrentes?</h3>
+    <p id="recurrConfirmTxt" style="font-size:0.84rem;color:var(--text-muted);margin-bottom:1.25rem;line-height:1.5;"></p>
+    <div style="display:flex;gap:0.65rem;justify-content:center;">
+      <button type="button"
+              onclick="document.getElementById('recurrConfirmModal').classList.remove('show')"
+              class="btn-kiwi btn-kiwi-ghost">Cancelar</button>
+      <button type="button" onclick="confirmarYEnviar()" class="btn-kiwi btn-kiwi-primary">
+        <i class="fa-solid fa-check"></i> Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATOS DE CLASES ──
+const clasesData = [
+  {% for c in clases %}
+  { id:{{ c.pk }}, titulo:"{{ c.titulo|escapejs }}", grupo:"{{ c.grupo|escapejs }}",
+    tema:"{{ c.tema|default:''|escapejs }}", notas:"{{ c.notas|default:''|escapejs }}",
+    fecha:"{{ c.fecha|date:'Y-m-d' }}", hora:"{{ c.fecha|date:'H:i' }}",
+    completada:{{ c.completada|yesno:'true,false' }},
+    es_recurrente:{{ c.es_recurrente|yesno:'true,false' }},
+    satisfaccion:{{ c.satisfaccion|default:'null' }} },
+  {% endfor %}
+];
+
+const DAYS_ES   = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const todayObj  = new Date(); todayObj.setHours(0,0,0,0);
+const todayStr  = fmtDate(todayObj);
+let miniYear    = todayObj.getFullYear();
+let miniMonth   = todayObj.getMonth();
+let weekStart;
+
+function fmtDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function getMonday(d) {
+  const dt = new Date(d); dt.setHours(0,0,0,0);
+  const dow = dt.getDay();
+  dt.setDate(dt.getDate() + (dow === 0 ? -6 : 1 - dow));
+  return dt;
+}
+function classesForDate(ds) { return clasesData.filter(c => c.fecha === ds); }
+function trunc(s, n) { return s && s.length > n ? s.slice(0,n)+'…' : (s||''); }
+function getCsrf() {
+  let v = '';
+  document.cookie.split(';').forEach(c => {
+    c = c.trim();
+    if (c.startsWith('csrftoken=')) v = decodeURIComponent(c.slice(10));
+  });
+  return v;
+}
+
+/* ── MINI CALENDAR ── */
+function renderMiniCal(year, month) {
+  document.getElementById('miniCalTitle').textContent = MONTHS_ES[month]+' '+year;
+  const grid = document.getElementById('miniCalGrid');
+  grid.innerHTML = '';
+  const first = new Date(year, month, 1);
+  const days  = new Date(year, month+1, 0).getDate();
+  let dow = first.getDay(); dow = dow === 0 ? 6 : dow - 1;
+
+  const addCell = (num, cls, onClick) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'mini-day-wrap';
+    const cell = document.createElement('div');
+    cell.className = 'mini-cal-day' + (cls ? ' '+cls : '');
+    cell.textContent = num;
+    if (onClick) cell.onclick = onClick;
+    wrap.appendChild(cell);
+    return wrap;
+  };
+
+  for (let i = 0; i < dow; i++) {
+    const prev = new Date(year, month, -dow+i+1);
+    grid.appendChild(addCell(prev.getDate(), 'other-month', null));
+  }
+  for (let d = 1; d <= days; d++) {
+    const dt  = new Date(year, month, d);
+    const ds  = fmtDate(dt);
+    const cls = ds === todayStr ? 'today' : '';
+    const wrap = addCell(d, cls, () => {
+      weekStart = getMonday(dt);
+      renderWeekView(weekStart);
+      openDayModal(ds);
+    });
+    if (clasesData.some(c => c.fecha === ds)) {
+      const dot = document.createElement('div');
+      dot.className = 'mini-cal-dot';
+      wrap.appendChild(dot);
+    }
+    grid.appendChild(wrap);
+  }
+  const rem = (dow + days) % 7;
+  for (let d = 1; d <= (rem ? 7-rem : 0); d++) {
+    grid.appendChild(addCell(d, 'other-month', null));
+  }
+}
+function changeMiniMonth(d) {
+  miniMonth += d;
+  if (miniMonth > 11) { miniMonth = 0; miniYear++; }
+  if (miniMonth < 0)  { miniMonth = 11; miniYear--; }
+  renderMiniCal(miniYear, miniMonth);
+}
+
+/* ── WEEK VIEW — TIME GRID ── */
+const START_HOUR = 7;   // primera franja visible (7:00)
+const END_HOUR   = 20;  // última franja visible (20:00)
+const PX_PER_HOUR = 64; // altura en px de cada hora
+const TOTAL_H = (END_HOUR - START_HOUR) * PX_PER_HOUR;
+
+function renderWeekView(monday) {
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const mD = monday.getDate(), mM = MONTHS_ES[monday.getMonth()];
+  const sD = sunday.getDate(),  sM = MONTHS_ES[sunday.getMonth()];
+  document.getElementById('weekTitle').textContent =
+    monday.getMonth() === sunday.getMonth()
+      ? `${mD} – ${sD} de ${mM} ${monday.getFullYear()}`
+      : `${mD} de ${mM} – ${sD} de ${sM} ${monday.getFullYear()}`;
+
+  // ── Cabeceras de días ──
+  const headersRow = document.getElementById('weekHeadersRow');
+  // Conservar el spacer y reemplazar el resto
+  headersRow.innerHTML = '<div class="week-time-spacer"></div>';
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(monday); dt.setDate(monday.getDate()+i);
+    const ds = fmtDate(dt);
+    const hdr = document.createElement('div');
+    hdr.className = 'week-col-header' + (ds === todayStr ? ' today' : '');
+    hdr.innerHTML = `<div class="week-day-name">${DAYS_ES[i]}</div>
+      <div class="week-day-num">${dt.getDate()}</div>`;
+    hdr.onclick = () => openDayModal(ds);
+    headersRow.appendChild(hdr);
+  }
+
+  // ── Columna de horas ──
+  const timeCol = document.getElementById('weekTimeCol');
+  timeCol.innerHTML = '';
+  timeCol.style.height = TOTAL_H + 'px';
+  for (let h = START_HOUR; h <= END_HOUR; h++) {
+    const lbl = document.createElement('div');
+    lbl.className = 'week-time-label';
+    lbl.style.top = ((h - START_HOUR) * PX_PER_HOUR) + 'px';
+    lbl.textContent = h + ':00';
+    timeCol.appendChild(lbl);
+  }
+
+  // ── Columnas de días ──
+  const daysGrid = document.getElementById('weekDaysGrid');
+  daysGrid.innerHTML = '';
+  daysGrid.style.height = TOTAL_H + 'px';
+
+  for (let i = 0; i < 7; i++) {
+    const dt = new Date(monday); dt.setDate(monday.getDate()+i);
+    const ds = fmtDate(dt);
+    const col = document.createElement('div');
+    col.className = 'week-day-body' + (ds === todayStr ? ' today' : '');
+    col.style.height = TOTAL_H + 'px';
+    col.onclick = () => openDayModal(ds);
+
+    // Líneas de hora (sólidas) y media hora (punteadas)
+    for (let h = START_HOUR; h < END_HOUR; h++) {
+      const solid = document.createElement('div');
+      solid.className = 'week-hour-line';
+      solid.style.top = ((h - START_HOUR) * PX_PER_HOUR) + 'px';
+      col.appendChild(solid);
+      const half = document.createElement('div');
+      half.className = 'week-hour-line half';
+      half.style.top = ((h - START_HOUR) * PX_PER_HOUR + PX_PER_HOUR / 2) + 'px';
+      col.appendChild(half);
+    }
+
+    // Chips de clase posicionados por hora
+    classesForDate(ds).forEach(c => {
+      const [hh, mm] = c.hora.split(':').map(Number);
+      if (hh < START_HOUR || hh >= END_HOUR) return; // fuera del rango visible
+      const topPx = (hh - START_HOUR) * PX_PER_HOUR + mm * (PX_PER_HOUR / 60);
+      const chip = document.createElement('div');
+      chip.className = 'clase-chip-timed' + (c.completada ? ' done' : '');
+      chip.style.top  = topPx + 'px';
+      chip.style.height = (PX_PER_HOUR - 6) + 'px';
+      chip.title = `${c.hora} — ${c.titulo} · ${c.grupo}`;
+      chip.innerHTML = `<div class="chip-time">${c.hora}</div>
+        <div class="chip-title">${trunc(c.titulo, 22)}</div>
+        <div class="chip-grupo">${trunc(c.grupo, 18)}</div>`;
+      chip.onclick = e => { e.stopPropagation(); openDayModal(ds); };
+      col.appendChild(chip);
+    });
+
+    daysGrid.appendChild(col);
+  }
+}
+function changeWeek(d) {
+  const n = new Date(weekStart); n.setDate(weekStart.getDate()+d*7);
+  weekStart = n; renderWeekView(weekStart);
+}
+function goToday() {
+  weekStart = getMonday(todayObj); renderWeekView(weekStart);
+  miniYear = todayObj.getFullYear(); miniMonth = todayObj.getMonth();
+  renderMiniCal(miniYear, miniMonth);
+}
+
+/* ── DAY MODAL ── */
+function openDayModal(dateStr) {
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y,m-1,d);
+  const dow = dt.getDay();
+  const names = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  document.getElementById('dayDetailTitle').innerHTML =
+    `<i class="fa-solid fa-calendar-day" style="color:var(--blue2);margin-right:0.4rem;font-size:0.82rem;"></i>${names[dow]}, ${d} de ${MONTHS_ES[m-1]} de ${y}`;
+
+  const classes = classesForDate(dateStr);
+  const cont = document.getElementById('dayDetailContent');
+
+  if (!classes.length) {
+    cont.innerHTML = `<div style="text-align:center;padding:1.75rem 1rem;">
+      <div style="font-size:2.2rem;color:var(--blue2);opacity:0.35;margin-bottom:0.65rem;"><i class="fa-solid fa-calendar-xmark"></i></div>
+      <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 0.75rem;">Sin clases programadas para este día</p>
+      <button onclick="closeDayModal();openNuevaClaseModal();" class="btn-kiwi btn-kiwi-blue btn-kiwi-sm">
+        <i class="fa-solid fa-plus"></i> Nueva clase
+      </button></div>`;
+  } else {
+    cont.innerHTML = classes.map(c => {
+      const safeTitle = c.titulo.replace(/'/g,"\\'");
+      return `<div class="day-clase-card">
+        <div class="day-clase-top">
+          <span class="day-clase-time">${c.hora}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="day-clase-title">${c.titulo}</div>
+            <div class="day-clase-meta">
+              <span class="kiwi-badge badge-blue">${c.grupo}</span>
+              ${c.tema?`<span style="margin-left:0.3rem;">${trunc(c.tema,38)}</span>`:''}
+              ${c.es_recurrente?'<span class="kiwi-badge badge-yellow"><i class="fa-solid fa-rotate" style="font-size:0.5rem;"></i> Recurrente</span>':''}
+            </div>
+          </div>
+        </div>
+        <div class="day-clase-actions">
+          <a href="/calendario/eliminar/${c.id}/"
+             onclick="return confirm('¿Eliminar \\'${safeTitle}\\'? Esta acción no se puede deshacer.')"
+             class="btn-kiwi btn-kiwi-danger btn-kiwi-sm">
+            <i class="fa-solid fa-trash"></i> Eliminar
+          </a>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('dayDetailOverlay').classList.add('show');
+}
+function closeDayModal() { document.getElementById('dayDetailOverlay').classList.remove('show'); }
+
+/* ── NUEVA CLASE MODAL ── */
+function openNuevaClaseModal() {
+  const now = new Date(); now.setMinutes(0,0,0); now.setHours(now.getHours()+1);
+  const p = n => String(n).padStart(2,'0');
+  document.getElementById('fechaInput').value =
+    `${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}T${p(now.getHours())}:00`;
+  document.getElementById('nuevaClaseOverlay').classList.add('show');
+}
+function closeNuevaClaseModal() { document.getElementById('nuevaClaseOverlay').classList.remove('show'); }
+
+/* ── RECURRENCIA ── */
+function toggleRecurrencia() {
+  const checked = document.getElementById('esRecurrenteCheck').checked;
+  document.getElementById('recurrenciaSection').classList.toggle('show', checked);
+  if (checked) actualizarResumen();
+}
+function actualizarResumen() {
+  const freq = document.querySelector('[name="frecuencia_semanas"]')?.value;
+  const dur  = document.querySelector('[name="duracion_meses"]')?.value;
+  const labels = {'1':'semanal','2':'quincenal','4':'mensual'};
+  const el = document.getElementById('recurrResumenTexto');
+  if (el) el.textContent = `Se creará una clase ${labels[freq]||''} durante ${dur} meses.`;
+}
+document.getElementById('nuevaClaseForm')?.addEventListener('submit', function(e) {
+  if (!document.getElementById('esRecurrenteCheck').checked) return;
+  e.preventDefault();
+  const freq = this.querySelector('[name="frecuencia_semanas"]').value;
+  const dur  = this.querySelector('[name="duracion_meses"]').value;
+  const labels = {'1':'semanal','2':'quincenal','4':'mensual'};
+  document.getElementById('recurrConfirmTxt').textContent =
+    `Se creará la clase de forma ${labels[freq]||'periódica'} durante ${dur} meses.`;
+  document.getElementById('recurrConfirmModal').classList.add('show');
+});
+function confirmarYEnviar() {
+  document.getElementById('recurrConfirmModal').classList.remove('show');
+  document.getElementById('nuevaClaseForm').submit();
+}
+
+/* ── INIT ── */
+renderMiniCal(miniYear, miniMonth);
+weekStart = getMonday(todayObj);
+renderWeekView(weekStart);
+</script>
+
+{% endblock %}{% endwith %}

@@ -1,0 +1,495 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| {{ plan.titulo }}{% endblock %}
+{% block topbar_icon %}file-lines{% endblock %}
+{% block topbar_title %}{{ plan.titulo|truncatechars:50 }}{% endblock %}
+{% block extra_css %}
+<style>
+/* ══ VARIABLES ADICIONALES ══ */
+:root {
+  --doc-blue:   #1e3a8a;
+  --doc-blue2:  #2563eb;
+}
+
+/* ══ ACTION BAR ══ */
+.action-bar {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg); padding: 0.9rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem; box-shadow: var(--shadow);
+  flex-wrap: wrap; gap: 0.75rem;
+}
+
+/* ══ DOCUMENTO INSTITUCIONAL ══ */
+#plan-document { font-family: 'Segoe UI', Arial, sans-serif; color: #111; }
+
+/* Encabezado azul de institución */
+.inst-header {
+  background: linear-gradient(135deg, #0f2460 0%, #1e3a8a 55%, #2563eb 100%);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 1.75rem 2rem 1.25rem; color: white; position: relative; overflow: hidden;
+}
+.inst-header::before {
+  content: ''; position: absolute; bottom: -30px; right: -30px;
+  width: 220px; height: 220px; border-radius: 50%;
+  background: rgba(255,255,255,0.04); pointer-events: none;
+}
+.inst-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
+  padding: 0.2rem 0.8rem; border-radius: 20px;
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 0.85rem;
+}
+.inst-header h1 { font-size: 1.55rem; font-weight: 900; margin-bottom: 0.4rem; line-height: 1.2; }
+.inst-header .inst-sub {
+  font-size: 0.8rem; opacity: 0.75;
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+}
+
+/* Tabla de identificación */
+.id-table-wrap {
+  background: var(--surface); border: 1.5px solid var(--border); border-top: none; overflow: hidden;
+}
+.id-table { width: 100%; border-collapse: collapse; }
+.id-table th, .id-table td { padding: 0.6rem 1rem; font-size: 0.78rem; border: 1px solid var(--border); }
+.id-table th {
+  background: rgba(30,58,138,0.07); font-size: 0.62rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--doc-blue); text-align: center;
+}
+[data-theme="dark"] .id-table th { background: rgba(99,102,241,0.1); color: var(--blue2); }
+.id-table td { font-weight: 700; color: var(--text); text-align: center; }
+.id-table td.label-cell {
+  font-size: 0.6rem; font-weight: 900; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted); background: var(--bg); width: 140px; text-align: left;
+}
+.id-table .competencia-cell { background: rgba(99,102,241,0.07); color: var(--doc-blue); font-weight: 800; }
+[data-theme="dark"] .id-table .competencia-cell { color: var(--blue2); }
+
+/* Separador de desempeño */
+.desemp-separator {
+  background: linear-gradient(90deg, var(--doc-blue), #2563eb);
+  color: white; padding: 0.55rem 1.25rem;
+  font-size: 0.68rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em;
+  border: 1.5px solid var(--doc-blue); border-top: none;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+[data-theme="dark"] .desemp-separator { background: linear-gradient(90deg, #1e3a8a, var(--blue2)); border-color: var(--blue2); }
+
+/* Sección principal del plan */
+.plan-section {
+  background: var(--surface); border: 1.5px solid var(--border); border-top: none;
+}
+.plan-section:last-of-type { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+.plan-section-header {
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(90deg, rgba(30,58,138,0.06), transparent);
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 0.65rem;
+}
+.plan-section-header .sec-num {
+  width: 24px; height: 24px; border-radius: 6px;
+  background: var(--doc-blue2); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.68rem; font-weight: 900; flex-shrink: 0;
+}
+[data-theme="dark"] .plan-section-header .sec-num { background: var(--blue2); }
+.plan-section-header .sec-title {
+  font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--doc-blue);
+}
+[data-theme="dark"] .plan-section-header .sec-title { color: var(--blue2); }
+.plan-section-header .sec-subtitle { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+/* Tabla DESEMPEÑO | ESTRATEGIA */
+.desempeno-table { width: 100%; border-collapse: collapse; }
+.desempeno-table th {
+  padding: 0.65rem 1.25rem; font-size: 0.65rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.09em; border: 1px solid var(--border); text-align: left;
+}
+.desempeno-table th.th-que { background: rgba(30,58,138,0.08); color: #1e3a8a; width: 38%; }
+.desempeno-table th.th-como { background: rgba(37,99,235,0.07); color: #2563eb; width: 62%; }
+[data-theme="dark"] .desempeno-table th.th-que { background: rgba(99,102,241,0.12); color: var(--blue2); }
+[data-theme="dark"] .desempeno-table th.th-como { background: rgba(99,102,241,0.08); color: var(--blue2); }
+.desempeno-table td {
+  vertical-align: top; padding: 1rem 1.25rem; border: 1px solid var(--border);
+  font-size: 0.82rem; line-height: 1.75; color: var(--text);
+}
+.desempeno-table td.td-que { background: rgba(30,58,138,0.03); }
+[data-theme="dark"] .desempeno-table td.td-que { background: rgba(99,102,241,0.04); }
+
+.desempeno-goal {
+  font-weight: 800; font-size: 0.88rem; color: var(--doc-blue); line-height: 1.5;
+  margin-bottom: 0.85rem; padding: 0.75rem;
+  background: rgba(30,58,138,0.05); border-left: 3px solid var(--doc-blue2); border-radius: 0 6px 6px 0;
+}
+[data-theme="dark"] .desempeno-goal { color: var(--blue2); background: rgba(99,102,241,0.07); border-color: var(--blue2); }
+
+.temas-label {
+  font-size: 0.62rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.09em;
+  color: var(--text-muted); margin-bottom: 0.5rem;
+}
+.temas-list { padding-left: 0; list-style: none; margin: 0; }
+.temas-list li {
+  padding: 0.3rem 0; font-size: 0.8rem; color: var(--text);
+  border-bottom: 1px dashed var(--border);
+  display: flex; align-items: flex-start; gap: 0.5rem; line-height: 1.5;
+}
+.temas-list li:last-child { border-bottom: none; }
+.temas-list li::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--doc-blue2); flex-shrink: 0; margin-top: 0.4rem;
+}
+[data-theme="dark"] .temas-list li::before { background: var(--blue2); }
+
+.estrategia-text { font-size: 0.82rem; line-height: 1.85; color: var(--text); white-space: pre-line; }
+.estrategia-parrafo { margin-bottom: 0.75rem; font-size: 0.82rem; line-height: 1.85; }
+.estrategia-parrafo:last-child { margin-bottom: 0; }
+.estrategia-metodologia-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: rgba(37,99,235,0.1); color: var(--doc-blue2);
+  padding: 0.25rem 0.7rem; border-radius: 20px;
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em;
+  text-transform: uppercase; margin-bottom: 0.75rem;
+}
+[data-theme="dark"] .estrategia-metodologia-chip { background: rgba(99,102,241,0.15); color: var(--blue2); }
+
+/* VALORACIÓN CONTINUA */
+.valoracion-block { padding: 1.25rem 1.5rem; }
+.valoracion-item {
+  padding: 0.3rem 0; font-size: 0.82rem; color: var(--text);
+  border-bottom: 1px dashed var(--border); display: flex; align-items: flex-start; gap: 0.5rem; line-height: 1.6;
+}
+.valoracion-item:last-child { border-bottom: none; }
+.valoracion-item::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: #00B0F0; flex-shrink: 0; margin-top: 0.45rem;
+}
+
+/* Tabla rúbrica */
+.rubrica-table { width: 100%; border-collapse: collapse; }
+.rubrica-table th {
+  padding: 0.7rem 1rem; font-size: 0.65rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.09em; text-align: left; border: 1px solid var(--border);
+}
+.rubrica-table th.th-desempeno { background: rgba(30,58,138,0.08); color: #1e3a8a; width: 34%; }
+.rubrica-table th.th-superior  { background: rgba(16,185,129,0.1);  color: #065f46; width: 22%; }
+.rubrica-table th.th-alto      { background: rgba(59,130,246,0.1);  color: #1e40af; width: 22%; }
+.rubrica-table th.th-basico    { background: rgba(245,158,11,0.1);  color: #92400e; width: 22%; }
+[data-theme="dark"] .rubrica-table th.th-desempeno { background: rgba(99,102,241,0.12); color: var(--blue2); }
+[data-theme="dark"] .rubrica-table th.th-superior  { background: rgba(16,185,129,0.12); color: #6ee7b7; }
+[data-theme="dark"] .rubrica-table th.th-alto      { background: rgba(59,130,246,0.12); color: #93c5fd; }
+[data-theme="dark"] .rubrica-table th.th-basico    { background: rgba(245,158,11,0.12); color: #fcd34d; }
+.rubrica-table td {
+  vertical-align: top; padding: 0.85rem 1rem; border: 1px solid var(--border);
+  font-size: 0.8rem; line-height: 1.7; color: var(--text);
+}
+.rubrica-table td.td-desempeno { font-weight: 800; color: var(--doc-blue); }
+[data-theme="dark"] .rubrica-table td.td-desempeno { color: var(--blue2); }
+.rubrica-level-badge {
+  display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.55rem; border-radius: 20px;
+  font-size: 0.58rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.4rem;
+}
+.badge-sup { background: rgba(16,185,129,0.15); color: #065f46; }
+.badge-alt { background: rgba(59,130,246,0.15); color: #1e40af; }
+.badge-bas { background: rgba(245,158,11,0.15); color: #92400e; }
+[data-theme="dark"] .badge-sup { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+[data-theme="dark"] .badge-alt { background: rgba(59,130,246,0.2); color: #93c5fd; }
+[data-theme="dark"] .badge-bas { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+/* Pie de documento */
+.doc-footer {
+  background: var(--blue-bg); border: 1.5px solid var(--border); border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.fw-bar { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.fw-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  background: rgba(106,128,226,0.1); color: var(--blue1); padding: 0.15rem 0.5rem; border-radius: 12px;
+  font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+}
+[data-theme="dark"] .fw-chip { color: var(--blue2); background: rgba(99,102,241,0.15); }
+
+/* Sidebar */
+.detail-sidebar { position: sticky; top: calc(var(--topbar-h) + 1.5rem); }
+.info-table { width: 100%; border-collapse: collapse; }
+.info-table td { padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+.info-table td:first-child {
+  width: 42%; font-weight: 800; color: var(--text-muted);
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.info-table tr:last-child td { border-bottom: none; }
+</style>
+{% endblock %}
+{% with active='plan_aula' %}
+{% block content %}
+
+<!-- ACTION BAR -->
+<div class="action-bar">
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <a href="/plan-aula/" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+      <i class="fa-solid fa-arrow-left"></i> Volver
+    </a>
+    <div>
+      <div style="font-size:0.84rem;font-weight:900;">{{ plan.titulo }}</div>
+      <div style="font-size:0.7rem;color:var(--text-muted);">
+        {{ plan.get_tipo_display }} &middot; {{ plan.get_grado_display }} &middot; {{ plan.ciclo }}
+        {% if plan.periodo %}&middot; Período {{ plan.periodo }}{% endif %}
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+    <a href="/plan-aula/exportar/{{ plan.pk }}/" target="_blank" class="btn-kiwi btn-kiwi-primary btn-kiwi-sm">
+      <i class="fa-solid fa-file-export"></i> Exportar formato institucional
+    </a>
+    <button onclick="downloadPDF()" id="pdfBtn" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+      <i class="fa-solid fa-file-pdf"></i> Descargar PDF
+    </button>
+    <a href="/plan-aula/eliminar/{{ plan.pk }}/"
+       class="btn-kiwi btn-kiwi-danger btn-kiwi-sm"
+       onclick="return confirm('¿Eliminar este plan permanentemente?')">
+      <i class="fa-solid fa-trash"></i> Eliminar
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- ══ COLUMNA PRINCIPAL ══ -->
+  <div class="col-lg-9">
+    <div id="plan-document">
+
+      <!-- ─── ENCABEZADO INSTITUCIONAL ─── -->
+      <div class="inst-header">
+        <div class="inst-badge">
+          <i class="fa-solid fa-{% if plan.tipo == 'pensum' %}graduation-cap{% else %}file-lines{% endif %}"></i>
+          {{ plan.get_tipo_display }}
+        </div>
+        <h1>{{ plan.titulo }}</h1>
+        <div class="inst-sub">
+          <span><i class="fa-solid fa-school"></i> {{ usuario_institucion|default:"Colegio San Francisco de Asís" }}</span>
+          <span style="opacity:0.4;">|</span>
+          <span><i class="fa-solid fa-heart-pulse"></i> Gestión Socioemocional</span>
+          <span style="opacity:0.4;">|</span>
+          <span><i class="fa-solid fa-calendar-alt"></i> Período {{ plan.periodo|default:"I" }} — {{ plan.duracion_semanas }} semanas</span>
+        </div>
+      </div>
+
+      <!-- ─── TABLA DE IDENTIFICACIÓN ─── -->
+      <div class="id-table-wrap">
+        <table class="id-table">
+          <thead>
+            <tr>
+              <th>Campo de Formación</th>
+              <th>Competencia SEL</th>
+              <th>Grado</th>
+              <th>Ciclo</th>
+              <th>Período</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><i class="fa-solid fa-heart-pulse" style="color:#2563eb;margin-right:0.3rem;"></i> Gestión Socioemocional</td>
+              <td class="competencia-cell">
+                {% if plan.competencias == 'autoconciencia' %}<i class="fa-solid fa-eye" style="color:#f59e0b;"></i> Autoconciencia
+                {% elif plan.competencias == 'autogestion' %}<i class="fa-solid fa-sliders" style="color:#3b82f6;"></i> Autogestión
+                {% elif plan.competencias == 'conciencia_social' %}<i class="fa-solid fa-users" style="color:#10b981;"></i> Conciencia Social
+                {% elif plan.competencias == 'habilidades_relacionales' %}<i class="fa-solid fa-handshake" style="color:#8b5cf6;"></i> Hab. Relacionales
+                {% elif plan.competencias == 'toma_decisiones' %}<i class="fa-solid fa-scale-balanced" style="color:#ef4444;"></i> Toma de Decisiones
+                {% else %}<i class="fa-solid fa-infinity" style="color:#6366f1;"></i> Bienestar Integral{% endif %}
+              </td>
+              <td><strong>{{ plan.get_grado_display }}</strong></td>
+              <td><strong>{{ plan.ciclo }}</strong></td>
+              <td><strong>Período {{ plan.periodo|default:"I" }}</strong></td>
+            </tr>
+            <tr>
+              <td class="label-cell" colspan="1">Docente</td>
+              <td colspan="4" style="text-align:left;">{{ usuario_nombre }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ─── DESEMPEÑOS (loop) ─── -->
+      {% for d in desempenios %}
+
+        <!-- Separador de desempeño -->
+        <div class="desemp-separator">
+          <i class="fa-solid fa-bullseye"></i>
+          {% if desempenios|length > 1 %}Desempeño {{ forloop.counter }}{% else %}Desempeño y Estrategia de Aprendizaje{% endif %}
+        </div>
+
+        <!-- ── DESEMPEÑO | ESTRATEGIA ── -->
+        <div class="plan-section">
+          <table class="desempeno-table">
+            <thead>
+              <tr>
+                <th class="th-que">
+                  <i class="fa-solid fa-bullseye" style="margin-right:0.3rem;"></i>
+                  DESEMPEÑO <span style="font-weight:500;opacity:0.7;">(¿Qué?)</span>
+                </th>
+                <th class="th-como">
+                  <i class="fa-solid fa-chalkboard-user" style="margin-right:0.3rem;"></i>
+                  ESTRATEGIA DE APRENDIZAJE <span style="font-weight:500;opacity:0.7;">(¿Cómo?)</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="td-que">
+                  <div class="desempeno-goal">{{ d.desempenio }}</div>
+                  {% if d.temas %}
+                  <div class="temas-label">
+                    <i class="fa-solid fa-list-check" style="margin-right:0.3rem;"></i>Temas para Trabajar
+                  </div>
+                  <ul class="temas-list">
+                    {% for tema in d.temas %}<li>{{ tema }}</li>{% endfor %}
+                  </ul>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="estrategia-metodologia-chip">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i> Enfoque Integrado
+                  </div>
+                  {% if d.estrategia %}
+                    {% for parrafo in d.estrategia %}
+                    <div class="estrategia-parrafo">{{ parrafo }}</div>
+                    {% endfor %}
+                  {% else %}
+                    <span style="color:var(--text-muted);font-style:italic;">Sin estrategia generada.</span>
+                  {% endif %}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── VALORACIÓN CONTINUA ── -->
+        <div class="plan-section">
+          <div class="plan-section-header">
+            <div style="display:flex;align-items:center;gap:0.65rem;width:100%;">
+              <div style="width:24px;height:24px;border-radius:6px;background:#00B0F0;color:white;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:900;flex-shrink:0;">
+                <i class="fa-solid fa-clipboard-check" style="font-size:0.65rem;"></i>
+              </div>
+              <div>
+                <div class="sec-title">Valoración Continua</div>
+                <div class="sec-subtitle">¿Cómo se evidencia y acompaña el aprendizaje socioemocional?</div>
+              </div>
+            </div>
+          </div>
+          <div class="valoracion-block">
+            {% if d.valoracion %}
+              {% for item in d.valoracion %}
+              <div class="valoracion-item">{{ item }}</div>
+              {% endfor %}
+            {% else %}
+              <span style="color:var(--text-muted);font-style:italic;">Sin criterios de valoración generados.</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- ── RÚBRICA DE DESEMPEÑO ── -->
+        <div class="plan-section">
+          <div class="plan-section-header">
+            <div style="width:24px;height:24px;border-radius:6px;background:var(--doc-blue2);color:white;display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:900;flex-shrink:0;">
+              <i class="fa-solid fa-table-list" style="font-size:0.6rem;"></i>
+            </div>
+            <div>
+              <div class="sec-title">Rúbrica de Desempeño</div>
+              <div class="sec-subtitle">Niveles de logro: Superior · Alto · Básico</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="rubrica-table">
+              <thead>
+                <tr>
+                  <th class="th-desempeno"><i class="fa-solid fa-bullseye" style="margin-right:0.3rem;"></i>DESEMPEÑO</th>
+                  <th class="th-superior"><i class="fa-solid fa-star" style="margin-right:0.3rem;"></i>SUPERIOR</th>
+                  <th class="th-alto"><i class="fa-solid fa-circle-up" style="margin-right:0.3rem;"></i>ALTO</th>
+                  <th class="th-basico"><i class="fa-solid fa-circle-half-stroke" style="margin-right:0.3rem;"></i>BÁSICO</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="td-desempeno">{{ d.desempenio }}</td>
+                  <td>
+                    <div class="rubrica-level-badge badge-sup"><i class="fa-solid fa-star"></i> Superior</div>
+                    <div>{{ d.nivel_superior|default:"—" }}</div>
+                  </td>
+                  <td>
+                    <div class="rubrica-level-badge badge-alt"><i class="fa-solid fa-circle-up"></i> Alto</div>
+                    <div>{{ d.nivel_alto|default:"—" }}</div>
+                  </td>
+                  <td>
+                    <div class="rubrica-level-badge badge-bas"><i class="fa-solid fa-circle-half-stroke"></i> Básico</div>
+                    <div>{{ d.nivel_basico|default:"—" }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      {% endfor %}
+
+      <!-- ─── PIE DEL DOCUMENTO ─── -->
+      <div class="doc-footer">
+        <i class="fa-solid fa-shield-heart" style="font-size:1.5rem;color:var(--blue2);flex-shrink:0;"></i>
+        <div style="flex:1;">
+          <div style="font-size:0.76rem;font-weight:900;color:var(--text);margin-bottom:0.3rem;">
+            Documento generado con K.I.W.I. · Kleit IA
+          </div>
+          <div class="fw-bar">
+            <div class="fw-chip"><i class="fa-solid fa-graduation-cap"></i> CASEL</div>
+            <div class="fw-chip"><i class="fa-solid fa-brain"></i> Yale RULER</div>
+            <div class="fw-chip"><i class="fa-solid fa-leaf"></i> Seligman PERMA</div>
+            <div class="fw-chip"><i class="fa-solid fa-spa"></i> Kabat-Zinn</div>
+            <div class="fw-chip"><i class="fa-solid fa-comments"></i> Rosenberg CNV</div>
+            <div class="fw-chip"><i class="fa-solid fa-book"></i> APA</div>
+            <div class="fw-chip"><i class="fa-solid fa-flag"></i> ICBF Colombia</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:0.62rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;">Docente</div>
+          <div style="font-size:0.82rem;font-weight:900;color:var(--text);">{{ usuario_nombre }}</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);">{{ usuario_institucion|default:"Colegio San Francisco de Asís" }}</div>
+          <div style="font-size:0.65rem;color:var(--text-muted);">{{ plan.created_at|date:"d/m/Y" }}</div>
+        </div>
+      </div>
+
+    </div><!-- /plan-document -->
+  </div>
+
+  <!-- ══ SIDEBAR ══ -->
+  <div class="col-lg-3">
+    <div class="detail-sidebar">
+      <div class="kiwi-card">
+        <div class="kiwi-card-header">
+          <h5 class="kiwi-card-title"><i class="fa-solid fa-circle-info"></i> Información del plan</h5>
+        </div>
+        <table class="info-table">
+          <tr><td>Tipo</td>
+            <td><span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.78rem;font-weight:800;background:rgba(106,128,226,0.1);padding:0.2rem 0.6rem;border-radius:20px;color:var(--blue1);">
+              <i class="fa-solid fa-file-lines"></i> {{ plan.get_tipo_display }}
+            </span></td>
+          </tr>
+          <tr><td>Grado</td><td><strong>{{ plan.get_grado_display }}</strong></td></tr>
+          <tr><td>Ciclo</td><td><span class="kiwi-badge badge-blue">{{ plan.ciclo }}</span></td></tr>
+          <tr><td>Período</td><td><strong>Período {{ plan.periodo|default:"I" }}</strong></td></tr>
+          <tr><td>Duración</td><td><strong>{{ plan.duracion_semanas }} semanas</strong></td></tr>
+          <tr><td>Desempeños</td><td><strong>{{ desempenios|length }}</strong></td></tr>
+          <tr><td>Competencia SEL</td><td style="font-size:0.78rem;">{{ plan.competencia_display }}</td></tr>
+          <tr><td>Creado</td><td>{{ plan.created_at|date:"d/m/Y H:i" }}</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}{% endwith %}
+{% block extra_js %}
+<script>
+function downloadPDF() {
+  window.location.href = '/plan-aula/descargar/{{ plan.pk }}/';
+}
+</script>
+{% endblock %}

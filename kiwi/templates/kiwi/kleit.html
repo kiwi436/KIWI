@@ -1,0 +1,809 @@
+{% extends 'kiwi/base.html' %}
+{% load static %}
+{% block title %}| Kleit IA{% endblock %}
+{% block topbar_icon %}cat{% endblock %}
+{% block topbar_title %}Kleit — Chat IA{% endblock %}
+{% block extra_css %}
+<style>
+/* ══ LAYOUT CHAT ══ */
+.kleit-layout {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  height: calc(100vh - var(--topbar-h) - 2rem);
+  gap: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--border);
+}
+
+/* ══ SIDEBAR DE CONVERSACIONES ══ */
+.kleit-sidebar {
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.kleit-sidebar-head {
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+.kleit-brand-row {
+  display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.85rem;
+}
+.kleit-brand-av {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--blue3), var(--blue2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: white;
+}
+.kleit-brand-name { font-size: 0.95rem; font-weight: 900; color: var(--text); }
+.kleit-brand-sub  { font-size: 0.65rem; color: var(--text-muted); margin-top: 1px; }
+.btn-nueva {
+  width: 100%; padding: 0.55rem 0.75rem;
+  background: var(--blue2); color: white; border: none;
+  border-radius: 10px; font-size: 0.8rem; font-weight: 800;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  gap: 0.4rem; transition: all 0.18s;
+}
+.btn-nueva:hover { background: var(--blue1); }
+
+.conv-list {
+  flex: 1; overflow-y: auto; padding: 0.5rem;
+}
+.conv-list::-webkit-scrollbar { width: 3px; }
+.conv-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.conv-item {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: 0.6rem 0.75rem; border-radius: 10px;
+  text-decoration: none; color: var(--text);
+  margin-bottom: 0.2rem; transition: all 0.15s;
+  position: relative; overflow: hidden;
+  border: 1.5px solid transparent;
+}
+.conv-item:hover { background: var(--blue-bg); border-color: var(--border); text-decoration: none; color: var(--text); }
+.conv-item.active { background: rgba(106,128,226,0.12); border-color: var(--blue2); color: var(--text); }
+.conv-item-ic {
+  width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  background: var(--blue-bg); display: flex; align-items: center;
+  justify-content: center; font-size: 0.85rem; color: var(--blue2);
+  border: 1.5px solid var(--border);
+}
+.conv-item.active .conv-item-ic { background: var(--blue2); color: white; border-color: var(--blue2); }
+.conv-item-body { flex: 1; min-width: 0; }
+.conv-item-title { font-size: 0.78rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-item-meta  { font-size: 0.62rem; color: var(--text-muted); margin-top: 1px; }
+.conv-del {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  background: transparent; border: none; color: var(--text-muted);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; opacity: 0; transition: all 0.15s;
+}
+.conv-item:hover .conv-del { opacity: 1; }
+.conv-del:hover { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+/* ══ ÁREA PRINCIPAL ══ */
+.kleit-main {
+  background: var(--blue-bg);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Topbar ── */
+.kleit-topbar {
+  padding: 0.8rem 1.25rem;
+  background: linear-gradient(135deg, var(--blue3), var(--blue1));
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; color: white;
+}
+.kleit-topbar-l { display: flex; align-items: center; gap: 0.75rem; }
+.kleit-av {
+  width: 38px; height: 38px; border-radius: 11px;
+  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+  overflow: hidden; padding: 3px;
+}
+.kleit-topbar-title { font-size: 0.9rem; font-weight: 900; }
+.kleit-topbar-sub { font-size: 0.65rem; opacity: 0.75; display: flex; align-items: center; gap: 0.3rem; margin-top: 1px; }
+.online-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; border: 1.5px solid rgba(255,255,255,0.5); }
+.grok-chip {
+  padding: 0.15rem 0.6rem; border-radius: 20px;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+  font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em; color: white;
+}
+
+/* ── Mensajes ── */
+.kleit-messages {
+  flex: 1; overflow-y: auto; padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  scroll-behavior: smooth;
+}
+.kleit-messages::-webkit-scrollbar { width: 4px; }
+.kleit-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Pantalla de bienvenida */
+.kleit-welcome {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 2rem;
+}
+.welcome-bot {
+  width: 90px; height: 90px; border-radius: 24px;
+  background: var(--surface); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.25rem; padding: 8px;
+  box-shadow: 0 8px 24px rgba(18,38,102,0.15);
+  overflow: hidden;
+}
+.welcome-title { font-size: 1.45rem; font-weight: 900; color: var(--text); margin-bottom: 0.4rem; }
+.welcome-sub { font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1.5rem; max-width: 480px; line-height: 1.6; }
+.welcome-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; max-width: 520px; }
+.welcome-chip {
+  padding: 0.45rem 0.85rem; border-radius: 20px;
+  background: var(--surface); border: 1.5px solid var(--border);
+  font-size: 0.74rem; font-weight: 700; color: var(--text-muted);
+  cursor: pointer; transition: all 0.18s;
+}
+.welcome-chip:hover { border-color: var(--blue2); color: var(--blue2); background: rgba(106,128,226,0.06); }
+
+/* Burbujas */
+.cmsg { display: flex; gap: 0.6rem; animation: msgIn 0.22s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+.cmsg.user { flex-direction: row-reverse; }
+.cmsg-av {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 0.85rem; margin-top: 2px;
+}
+.cmsg-av.k { background: var(--surface); border: 1.5px solid var(--border); overflow: hidden; padding: 2px; }
+.cmsg-av.u { background: var(--surface); border: 1.5px solid var(--border); color: var(--text-muted); }
+.cbubble {
+  max-width: 78%; padding: 0.75rem 1rem; border-radius: 16px;
+  font-size: 0.84rem; line-height: 1.65;
+}
+.cbubble.u { background: var(--blue2); color: white; border-top-right-radius: 4px; }
+.cbubble-wrap { max-width: 88%; display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* Consejo Kleit */
+.kleit-consejo {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-left: 4px solid var(--blue2);
+  border-radius: 14px; padding: 0.85rem 1rem;
+  font-size: 0.84rem; line-height: 1.65; color: var(--text);
+}
+
+/* Tarjetas de ideas */
+.idea-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 14px; overflow: hidden; transition: all 0.18s;
+}
+.idea-card:hover { border-color: var(--blue2); }
+.idea-card-head {
+  padding: 0.8rem 1rem; cursor: pointer;
+  display: flex; align-items: flex-start; gap: 0.65rem;
+  border-left: 4px solid var(--blue2);
+  background: linear-gradient(90deg, rgba(106,128,226,0.05), transparent);
+}
+.idea-num {
+  width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+  background: var(--blue2); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 900; margin-top: 1px;
+}
+.idea-titulo { font-size: 0.86rem; font-weight: 800; color: var(--text); flex: 1; }
+.idea-desc { font-size: 0.76rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.4; }
+.idea-chevron { color: var(--text-muted); font-size: 0.75rem; margin-top: 3px; flex-shrink: 0; transition: transform 0.2s; }
+.idea-card-body {
+  display: none; padding: 1rem 1rem 1rem 1.1rem;
+  border-top: 1.5px solid var(--border);
+}
+.idea-card-body.open { display: block; }
+.idea-section-label {
+  font-size: 0.6rem; font-weight: 900; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--blue2); margin: 0.75rem 0 0.35rem;
+}
+.idea-section-label:first-child { margin-top: 0; }
+.idea-body-text { font-size: 0.79rem; line-height: 1.6; color: var(--text-muted); }
+.idea-tag {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.18rem 0.55rem; border-radius: 20px;
+  font-size: 0.65rem; font-weight: 700;
+  background: var(--blue-bg); color: var(--text-muted);
+  border: 1px solid var(--border); margin: 0.15rem 0.1rem 0 0;
+}
+.idea-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1.5px solid var(--border); }
+.btn-guardar {
+  padding: 0.35rem 0.8rem; border-radius: 8px;
+  background: transparent; border: 1.5px solid var(--border);
+  font-size: 0.73rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; gap: 0.35rem;
+  color: var(--text-muted); transition: all 0.18s;
+}
+.btn-guardar:hover, .btn-guardar.saved { border-color: var(--success); color: var(--success); background: rgba(34,197,94,0.06); }
+
+/* Fuente chip */
+.fuente-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.15rem 0.55rem; border-radius: 20px;
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+.fuente-grok { background: rgba(139,92,246,0.12); color: #7c3aed; border: 1px solid rgba(139,92,246,0.2); }
+.fuente-local { background: rgba(245,158,11,0.12); color: #d97706; border: 1px solid rgba(245,158,11,0.2); }
+[data-theme="dark"] .fuente-grok { background: rgba(139,92,246,0.2); color: #a78bfa; }
+[data-theme="dark"] .fuente-local { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.65rem 0.9rem; background: var(--surface);
+  border: 1.5px solid var(--border); border-radius: 14px; border-top-left-radius: 4px;
+  width: fit-content;
+}
+.typing-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-muted); animation: typingPulse 1.4s ease infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingPulse { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+/* ── Selector de grado ── */
+.grado-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.25rem 0;
+  background: var(--surface);
+}
+.grado-label {
+  font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; flex-shrink: 0;
+}
+.grado-select {
+  flex: 1; max-width: 220px;
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: 8px; color: var(--text);
+  font-family: var(--font); font-size: 0.78rem; font-weight: 700;
+  padding: 0.3rem 0.6rem; outline: none; cursor: pointer;
+  transition: border-color 0.18s;
+}
+.grado-select:focus { border-color: var(--blue2); }
+[data-theme="dark"] .grado-select { background: var(--surface); }
+
+/* Badge de grado en burbuja usuario */
+.grado-badge {
+  display: inline-block; font-size: 0.65rem; font-weight: 800;
+  background: rgba(106,128,226,0.18); color: white;
+  border-radius: 5px; padding: 0.1rem 0.45rem; margin-bottom: 0.25rem;
+  letter-spacing: 0.03em;
+}
+
+/* ── Input ── */
+.kleit-input-area {
+  padding: 0.5rem 1.25rem 1rem;
+  background: var(--surface);
+  border-top: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+.input-row {
+  display: flex; gap: 0.55rem; align-items: flex-end;
+}
+.input-msg {
+  flex: 1; padding: 0.7rem 1rem; border-radius: 12px;
+  border: 1.5px solid var(--border); background: var(--blue-bg);
+  font-size: 0.84rem; color: var(--text); font-family: var(--font);
+  resize: none; outline: none; transition: border-color 0.15s;
+  max-height: 120px; overflow-y: auto; line-height: 1.5;
+}
+.input-msg:focus { border-color: var(--blue2); }
+.input-msg::placeholder { color: var(--text-muted); }
+.btn-enviar {
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  background: var(--blue2); border: none; color: white;
+  font-size: 0.95rem; cursor: pointer; transition: all 0.18s;
+  display: flex; align-items: center; justify-content: center;
+}
+.btn-enviar:hover { background: var(--blue1); }
+.btn-enviar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .kleit-layout { grid-template-columns: 1fr; }
+  .kleit-sidebar { display: none; }
+}
+</style>
+{% endblock %}
+
+{% with active='kleit' %}
+{% block content %}
+
+<div class="kleit-layout">
+
+  <!-- ══ SIDEBAR ══ -->
+  <div class="kleit-sidebar">
+    <div class="kleit-sidebar-head">
+      <div class="kleit-brand-row">
+        <div class="kleit-brand-av"><img src="{% static 'kiwi/img/chat_cat.png' %}" style="width:66px;height:66px;object-fit:contain;"></div>
+        <div>
+          <div class="kleit-brand-name">Kleit IA</div>
+          <div class="kleit-brand-sub">Gemini · Asistente SEL</div>
+        </div>
+      </div>
+      <button class="btn-nueva" onclick="nuevaConversacion()">
+        <i class="fa-solid fa-plus"></i> Nueva conversación
+      </button>
+    </div>
+
+    <div class="conv-list" id="convList">
+      {% for s in sesiones %}
+      <a href="/kleit/?sesion={{ s.pk }}"
+         class="conv-item {% if sesion_activa and sesion_activa.pk == s.pk %}active{% endif %}">
+        <div class="conv-item-ic">
+          <i class="fa-solid fa-comment-dots"></i>
+        </div>
+        <div class="conv-item-body">
+          <div class="conv-item-title">{{ s.titulo_sesion|default:"Conversación"|truncatechars:32 }}</div>
+          <div class="conv-item-meta">
+            <i class="fa-regular fa-clock" style="font-size:0.55rem;"></i>
+            {{ s.updated_at|date:"d/m/Y" }}
+            {% if s.grupo %} · {{ s.grupo|truncatechars:10 }}{% endif %}
+          </div>
+        </div>
+        <button class="conv-del" onclick="eliminarSesion(event, {{ s.pk }})" title="Eliminar">
+          <i class="fa-solid fa-trash"></i>
+        </button>
+      </a>
+      {% empty %}
+      <div style="text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.76rem;">
+        <i class="fa-solid fa-comment-slash" style="display:block;font-size:1.5rem;margin-bottom:0.5rem;opacity:0.35;"></i>
+        Sin conversaciones aún.<br>¡Empieza una nueva!
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ══ ÁREA PRINCIPAL ══ -->
+  <div class="kleit-main">
+
+    <!-- Topbar -->
+    <div class="kleit-topbar">
+      <div class="kleit-topbar-l">
+        <div class="kleit-av"><img src="{% static 'kiwi/img/chat_cat.png' %}" style="width:200%;height:200%;object-fit:contain;"></div>
+        <div>
+          <div class="kleit-topbar-title" id="topbarTitle">
+            {% if sesion_activa %}{{ sesion_activa.titulo_sesion|default:"Kleit IA" }}{% else %}Kleit IA{% endif %}
+          </div>
+          <div class="kleit-topbar-sub">
+            <span class="online-dot"></span>
+            <span>Gemini · Asistente Socioemocional</span>
+          </div>
+        </div>
+      </div>
+      <div class="grok-chip"><i class="fa-solid fa-bolt" style="margin-right:0.25rem;"></i>Gemini</div>
+    </div>
+
+    <!-- Mensajes -->
+    <div class="kleit-messages" id="chatMessages">
+
+      {% if not sesion_activa or not mensajes %}
+      <!-- Pantalla de bienvenida -->
+      <div class="kleit-welcome" id="welcomeScreen">
+        <div class="welcome-bot"><img src="{% static 'kiwi/img/chat_cat.png' %}" style="width:200%;height:200%;object-fit:contain;"></div>
+        <div class="welcome-title">¡Hola! Soy Kleit 👋</div>
+        <div class="welcome-sub">
+          Tu asistente de inteligencia artificial para gestión socioemocional.
+          Cuéntame qué tema quieres trabajar y con qué grupo, y te preparo actividades originales
+          adaptadas al contexto colombiano.
+        </div>
+        <div class="welcome-chips">
+          <button class="welcome-chip" onclick="usarEjemplo(this)">Manejo del estrés</button>
+          <button class="welcome-chip" onclick="usarEjemplo(this)">Empatía y comunicación</button>
+          <button class="welcome-chip" onclick="usarEjemplo(this)">Autoestima y confianza</button>
+          <button class="welcome-chip" onclick="usarEjemplo(this)">Mindfulness</button>
+          <button class="welcome-chip" onclick="usarEjemplo(this)">Resolución de conflictos</button>
+          <button class="welcome-chip" onclick="usarEjemplo(this)">Emociones básicas</button>
+        </div>
+      </div>
+      {% else %}
+      <!-- Mensajes de la sesión -->
+      {% for msg in mensajes %}
+        {% if msg.role == 'user' %}
+        <div class="cmsg user">
+          <div class="cmsg-av u"><i class="fa-solid fa-user"></i></div>
+          <div class="cbubble u">{{ msg.content }}</div>
+        </div>
+        {% else %}
+        <div class="cmsg kleit">
+          <div class="cmsg-av k"><img src="{% static 'kiwi/img/chat_cat.png' %}" style="width:200%;height:200%;object-fit:contain;"></div>
+          <div class="cbubble-wrap">
+            <div class="fuente-chip {% if msg.fuente == 'gemini' %}fuente-grok{% else %}fuente-local{% endif %}">
+              <i class="fa-solid fa-{% if msg.fuente == 'gemini' %}bolt{% else %}database{% endif %}"></i>
+              {% if msg.fuente == 'gemini' %}Gemini{% else %}Banco local{% endif %}
+              {% if msg.nivel %} · {{ msg.nivel }}{% endif %}
+            </div>
+            {% if msg.consejo %}
+            <div class="kleit-consejo">{{ msg.consejo }}</div>
+            {% endif %}
+            {% for idea in msg.ideas %}
+            <div class="idea-card">
+              <div class="idea-card-head" onclick="toggleIdea(this)">
+                <div class="idea-num">{{ forloop.counter }}</div>
+                <div style="flex:1;">
+                  <div class="idea-titulo">{{ idea.titulo }}</div>
+                  <div class="idea-desc">{{ idea.descripcion }}</div>
+                </div>
+                <i class="fa-solid fa-chevron-down idea-chevron"></i>
+              </div>
+              <div class="idea-card-body">
+                {% if idea.duracion_minutos %}
+                <div class="idea-tag"><i class="fa-regular fa-clock"></i> {{ idea.duracion_minutos }} min</div>
+                {% endif %}
+                {% if idea.materiales %}
+                <div class="idea-section-label"><i class="fa-solid fa-box"></i> Materiales</div>
+                <div class="idea-body-text">
+                  {% for m in idea.materiales %}<div>• {{ m }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                {% if idea.pasos %}
+                <div class="idea-section-label"><i class="fa-solid fa-list-ol"></i> Paso a paso</div>
+                <div class="idea-body-text">
+                  {% for p in idea.pasos %}<div style="margin-bottom:0.3rem;"><b>{{ forloop.counter }}.</b> {{ p }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                {% if idea.preguntas_reflexion %}
+                <div class="idea-section-label"><i class="fa-solid fa-question-circle"></i> Preguntas de reflexión</div>
+                <div class="idea-body-text">
+                  {% for p in idea.preguntas_reflexion %}<div>❓ {{ p }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                {% if idea.indicador_logro %}
+                <div class="idea-section-label"><i class="fa-solid fa-bullseye"></i> Indicador de logro</div>
+                <div class="idea-body-text">{{ idea.indicador_logro }}</div>
+                {% endif %}
+                {% if idea.adaptacion_primaria or idea.adaptacion_bachillerato %}
+                <div class="idea-section-label"><i class="fa-solid fa-sliders"></i> Adaptaciones</div>
+                <div class="idea-body-text">
+                  {% if idea.adaptacion_primaria %}<div>🏫 <b>Primaria:</b> {{ idea.adaptacion_primaria }}</div>{% endif %}
+                  {% if idea.adaptacion_bachillerato %}<div>🎓 <b>Bachillerato:</b> {{ idea.adaptacion_bachillerato }}</div>{% endif %}
+                </div>
+                {% endif %}
+                {% if idea.recursos_digitales %}
+                <div class="idea-section-label"><i class="fa-solid fa-link"></i> Recursos digitales</div>
+                <div class="idea-body-text">
+                  {% for r in idea.recursos_digitales %}<div>🔗 {{ r }}</div>{% endfor %}
+                </div>
+                {% endif %}
+                {% if idea.db_id %}
+                <div class="idea-actions">
+                  <button class="btn-guardar" onclick="toggleGuardar(this, {{ idea.db_id }})">
+                    <i class="fa-regular fa-bookmark"></i> Guardar idea
+                  </button>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+      {% endif %}
+
+    </div>
+
+    <!-- Selector de grado -->
+    <div class="grado-row">
+      <span class="grado-label"><i class="fa-solid fa-users" style="margin-right:0.25rem;"></i>Grado:</span>
+      <select class="grado-select" id="gradoSelect">
+        <option value="">Todos los grados</option>
+        <optgroup label="Primaria">
+          <option>1° Primaria</option>
+          <option>2° Primaria</option>
+          <option>3° Primaria</option>
+          <option>4° Primaria</option>
+          <option>5° Primaria</option>
+        </optgroup>
+        <optgroup label="Bachillerato">
+          <option>6° Bachillerato</option>
+          <option>7° Bachillerato</option>
+          <option>8° Bachillerato</option>
+          <option>9° Bachillerato</option>
+          <option>10° Bachillerato</option>
+          <option>11° Bachillerato</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Input -->
+    <div class="kleit-input-area">
+      <div class="input-row">
+        <textarea id="mensajeInput" class="input-msg" rows="1"
+          placeholder="¿Qué necesitas hoy? Ej: Dame 3 actividades sobre manejo del estrés...  (Enter para enviar)"
+          onkeydown="handleKey(event)"
+          oninput="autoResize(this)"></textarea>
+        <button class="btn-enviar" id="btnEnviar" onclick="enviarMensaje()">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /kleit-main -->
+</div><!-- /kleit-layout -->
+
+{% endblock %}{% endwith %}
+
+{% block extra_js %}
+<script>
+const SESION_ID = {{ sesion_activa.pk|default:"null" }};
+const CSRF = "{{ csrf_token }}";
+const CAT_IMG_URL = "{% static 'kiwi/img/chat_cat.png' %}";
+
+/* ── Toggle ideas ── */
+function toggleIdea(head) {
+  const body = head.nextElementSibling;
+  const chevron = head.querySelector('.idea-chevron');
+  const isOpen = body.classList.toggle('open');
+  chevron.style.transform = isOpen ? 'rotate(180deg)' : '';
+}
+
+/* ── Ejemplos rápidos ── */
+function usarEjemplo(btn) {
+  document.getElementById('mensajeInput').value = btn.textContent;
+  document.getElementById('mensajeInput').focus();
+  autoResize(document.getElementById('mensajeInput'));
+}
+
+/* ── Auto-resize textarea ── */
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+/* ── Enter para enviar ── */
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    enviarMensaje();
+  }
+}
+
+/* ── Nueva conversación ── */
+function nuevaConversacion() {
+  window.location.href = '/kleit/';
+}
+
+/* ── Eliminar sesión ── */
+function eliminarSesion(e, pk) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!confirm('¿Eliminar esta conversación?')) return;
+  fetch(`/kleit/eliminar/${pk}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF, 'X-Requested-With': 'XMLHttpRequest' }
+  }).then(() => {
+    if (SESION_ID === pk) {
+      window.location.href = '/kleit/';
+    } else {
+      window.location.reload();
+    }
+  });
+}
+
+/* ── Scroll al fondo ── */
+function scrollBottom() {
+  const msgs = document.getElementById('chatMessages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ── Renderizar mensaje usuario ── */
+function renderUserMsg(texto, grado) {
+  const div = document.createElement('div');
+  div.className = 'cmsg user';
+  const badgeHtml = grado ? `<div class="grado-badge"><i class="fa-solid fa-users" style="font-size:0.55rem;margin-right:0.2rem;"></i>${escHtml(grado)}</div>` : '';
+  div.innerHTML = `
+    <div class="cmsg-av u"><i class="fa-solid fa-user"></i></div>
+    <div class="cbubble u">${badgeHtml}${escHtml(texto)}</div>`;
+  return div;
+}
+
+/* ── Renderizar respuesta Kleit ── */
+function renderKleitMsg(resp) {
+  const div = document.createElement('div');
+  div.className = 'cmsg kleit';
+
+  const fuenteClass = resp.fuente === 'gemini' ? 'fuente-grok' : 'fuente-local';
+  const fuenteIcon = resp.fuente === 'gemini' ? 'bolt' : 'database';
+  const fuenteLabel = resp.fuente === 'gemini' ? 'Gemini' : 'Banco local';
+  const nivelLabel = resp.nivel ? ` · ${resp.nivel}` : '';
+
+  let ideasHtml = '';
+  (resp.ideas || []).forEach((idea, i) => {
+    const ideaId = (resp.ideas_ids || [])[i] || null;
+    const durTag = idea.duracion_minutos
+      ? `<span class="idea-tag"><i class="fa-regular fa-clock"></i> ${idea.duracion_minutos} min</span>` : '';
+    const mats = (idea.materiales || []).map(m => `<div>• ${escHtml(m)}</div>`).join('');
+    const pasos = (idea.pasos || []).map((p, j) => `<div style="margin-bottom:0.3rem;"><b>${j+1}.</b> ${escHtml(p)}</div>`).join('');
+    const pregs = (idea.preguntas_reflexion || []).map(p => `<div>❓ ${escHtml(p)}</div>`).join('');
+    const recursos = (idea.recursos_digitales || []).map(r => `<div>🔗 ${escHtml(r)}</div>`).join('');
+
+    ideasHtml += `
+    <div class="idea-card">
+      <div class="idea-card-head" onclick="toggleIdea(this)">
+        <div class="idea-num">${i+1}</div>
+        <div style="flex:1;">
+          <div class="idea-titulo">${escHtml(idea.titulo || 'Actividad')}</div>
+          <div class="idea-desc">${escHtml(idea.descripcion || '')}</div>
+        </div>
+        <i class="fa-solid fa-chevron-down idea-chevron"></i>
+      </div>
+      <div class="idea-card-body">
+        ${durTag}
+        ${mats ? `<div class="idea-section-label"><i class="fa-solid fa-box"></i> Materiales</div><div class="idea-body-text">${mats}</div>` : ''}
+        ${pasos ? `<div class="idea-section-label"><i class="fa-solid fa-list-ol"></i> Paso a paso</div><div class="idea-body-text">${pasos}</div>` : ''}
+        ${pregs ? `<div class="idea-section-label"><i class="fa-solid fa-question-circle"></i> Preguntas de reflexión</div><div class="idea-body-text">${pregs}</div>` : ''}
+        ${idea.indicador_logro ? `<div class="idea-section-label"><i class="fa-solid fa-bullseye"></i> Indicador de logro</div><div class="idea-body-text">${escHtml(idea.indicador_logro)}</div>` : ''}
+        ${recursos ? `<div class="idea-section-label"><i class="fa-solid fa-link"></i> Recursos digitales</div><div class="idea-body-text">${recursos}</div>` : ''}
+        ${ideaId ? `<div class="idea-actions"><button class="btn-guardar" onclick="toggleGuardar(this, ${ideaId})"><i class="fa-regular fa-bookmark"></i> Guardar idea</button></div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  div.innerHTML = `
+    <div class="cmsg-av k"><img src="${CAT_IMG_URL}" style="width:100%;height:100%;object-fit:contain;"></div>
+    <div class="cbubble-wrap">
+      <div class="fuente-chip ${fuenteClass}">
+        <i class="fa-solid fa-${fuenteIcon}"></i> ${fuenteLabel}${nivelLabel}
+      </div>
+      ${resp.consejo ? `<div class="kleit-consejo">${escHtml(resp.consejo)}</div>` : ''}
+      ${ideasHtml}
+    </div>`;
+  return div;
+}
+
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* ── Crear typing indicator dinámico ── */
+function crearTypingIndicator() {
+  const div = document.createElement('div');
+  div.className = 'cmsg kleit';
+  div.id = 'typingIndicatorEl';
+  div.innerHTML = `
+    <div class="cmsg-av k"><img src="${CAT_IMG_URL}" style="width:100%;height:100%;object-fit:contain;"></div>
+    <div class="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>`;
+  return div;
+}
+
+/* ── Enviar mensaje ── */
+let currentSesionId = SESION_ID;
+let enviando = false;
+
+async function enviarMensaje() {
+  if (enviando) return;
+  const msgEl = document.getElementById('mensajeInput');
+  const mensaje = msgEl.value.trim();
+
+  if (!mensaje) {
+    msgEl.focus();
+    return;
+  }
+
+  enviando = true;
+  document.getElementById('btnEnviar').disabled = true;
+
+  // Ocultar welcome screen si está visible
+  const ws = document.getElementById('welcomeScreen');
+  if (ws) ws.style.display = 'none';
+
+  // Mostrar mensaje usuario
+  const grado = document.getElementById('gradoSelect')?.value || '';
+  const container = document.getElementById('chatMessages');
+  container.appendChild(renderUserMsg(mensaje, grado));
+  msgEl.value = '';
+  msgEl.style.height = 'auto';
+
+  // Agregar typing indicator JUSTO DESPUÉS del mensaje del usuario
+  const typingEl = crearTypingIndicator();
+  container.appendChild(typingEl);
+  scrollBottom();
+
+  try {
+    const res = await fetch('/kleit/chat/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRF,
+      },
+      body: JSON.stringify({
+        sesion_id: currentSesionId,
+        mensaje: mensaje,
+        grupo: grado,
+      }),
+    });
+
+    const data = await res.json();
+    typingEl.remove();
+
+    if (data.ok) {
+      currentSesionId = data.sesion_id;
+      history.replaceState({}, '', `/kleit/?sesion=${data.sesion_id}`);
+      document.getElementById('topbarTitle').textContent = data.titulo_sesion || 'Kleit IA';
+      container.appendChild(renderKleitMsg(data.respuesta));
+      actualizarSidebar(data.sesion_id, data.titulo_sesion, '');
+    } else {
+      mostrarError(data.error || 'Error al conectar con Gemini.');
+    }
+  } catch (err) {
+    typingEl.remove();
+    mostrarError('Error de conexión. Verifica tu red.');
+  }
+
+  enviando = false;
+  document.getElementById('btnEnviar').disabled = false;
+  scrollBottom();
+  msgEl.focus();
+}
+
+function mostrarError(msg) {
+  const div = document.createElement('div');
+  div.className = 'cmsg kleit';
+  div.innerHTML = `
+    <div class="cmsg-av k" style="background:var(--danger)!important;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="kleit-consejo" style="border-left-color:var(--danger);color:var(--danger);">
+      ${escHtml(msg)}
+    </div>`;
+  document.getElementById('chatMessages').appendChild(div);
+}
+
+function actualizarSidebar(sesionId, titulo, grupo) {
+  // Marcar todas como inactivas
+  document.querySelectorAll('.conv-item').forEach(el => el.classList.remove('active'));
+
+  // Buscar si ya existe en la lista
+  let existing = document.querySelector(`.conv-item[href="/kleit/?sesion=${sesionId}"]`);
+  if (existing) {
+    existing.classList.add('active');
+    existing.querySelector('.conv-item-title').textContent = (titulo || 'Conversación').substring(0, 32);
+    // Mover al principio
+    existing.parentElement.prepend(existing);
+  } else {
+    // Crear nueva entrada
+    const convList = document.getElementById('convList');
+    // Remover estado vacío si existe
+    const emptyEl = convList.querySelector('[style*="text-align:center"]');
+    if (emptyEl) emptyEl.remove();
+
+    const hoy = new Date().toLocaleDateString('es-CO', {day:'2-digit', month:'2-digit', year:'numeric'});
+    const newItem = document.createElement('a');
+    newItem.href = `/kleit/?sesion=${sesionId}`;
+    newItem.className = 'conv-item active';
+    newItem.innerHTML = `
+      <div class="conv-item-ic"><i class="fa-solid fa-comment-dots"></i></div>
+      <div class="conv-item-body">
+        <div class="conv-item-title">${escHtml((titulo || 'Conversación').substring(0, 32))}</div>
+        <div class="conv-item-meta"><i class="fa-regular fa-clock" style="font-size:0.55rem;"></i> ${hoy}${grupo ? ' · ' + grupo.substring(0,10) : ''}</div>
+      </div>
+      <button class="conv-del" onclick="eliminarSesion(event, ${sesionId})" title="Eliminar">
+        <i class="fa-solid fa-trash"></i>
+      </button>`;
+    convList.prepend(newItem);
+  }
+}
+
+// Scroll al cargar si hay mensajes
+window.addEventListener('load', () => {
+  scrollBottom();
+  document.getElementById('mensajeInput').focus();
+});
+</script>
+{% endblock %}

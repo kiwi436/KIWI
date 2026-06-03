@@ -1,0 +1,150 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| Inicio{% endblock %}
+{% block topbar_icon %}house{% endblock %}
+{% block topbar_title %}Panel Principal{% endblock %}
+{% with active='dashboard' %}
+{% block content %}
+
+<!-- HERO -->
+<div class="kiwi-hero">
+  <div style="position:relative;z-index:1;">
+    <h1>Nos alegra verte, <span style="color:#a5c8ff;">{{ usuario_nombre }}</span></h1>
+    <p>
+      <i class="fa-regular fa-clock" style="margin-right:0.3rem;"></i>{{ hora|date:"l, j \d\e F \d\e Y" }}
+      &nbsp;&middot;&nbsp;
+      <i class="fa-solid fa-building-columns" style="margin-right:0.3rem;"></i>{{ usuario_institucion|default:"Colegio San Francisco de Asís" }}
+    </p>
+  </div>
+  <i class="fa-solid fa-house" style="position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:0.1;"></i>
+</div>
+
+<!-- MAIN GRID -->
+<div class="row g-4 mb-4">
+  <!-- Clases de hoy -->
+  <div class="col-md-4">
+    <div class="kiwi-card h-100">
+      <div class="kiwi-card-header">
+        <h5 class="kiwi-card-title">
+          <i class="fa-solid fa-sun"></i> Clases de hoy
+        </h5>
+        <a href="/calendario/" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+          <i class="fa-solid fa-arrow-right"></i> Ver todo
+        </a>
+      </div>
+      {% if clases_hoy %}
+        {% for c in clases_hoy %}
+        <div class="event-row">
+          <div class="event-time">
+            {{ c.fecha|date:"H:i" }}
+            <div class="event-dot"></div>
+            <div class="event-line"></div>
+          </div>
+          <div class="event-info">
+            <div class="event-title">{{ c.titulo }}</div>
+            <div class="event-meta">
+              <i class="fa-solid fa-users" style="color:var(--blue2);font-size:0.65rem;"></i>
+              {{ c.grupo }}
+              {% if c.tema %}&nbsp;&middot;&nbsp;{{ c.tema|truncatechars:35 }}{% endif %}
+            </div>
+          </div>
+          <div>
+            <span class="kiwi-badge badge-blue">HOY</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="fa-solid fa-sun"></i></div>
+          <h4>Sin clases hoy</h4>
+          <p>Disfruta tu dia o <a href="/calendario/" style="color:var(--blue2);font-weight:700;">programa una sesion</a></p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Proximas clases -->
+  <div class="col-md-4">
+    <div class="kiwi-card h-100">
+      <div class="kiwi-card-header">
+        <h5 class="kiwi-card-title">
+          <i class="fa-solid fa-clock"></i> Proximas clases
+        </h5>
+        <a href="/calendario/" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+          <i class="fa-solid fa-calendar-plus"></i> Nueva
+        </a>
+      </div>
+      {% if proximas %}
+        {% for c in proximas %}
+        <div class="event-row">
+          <div class="event-time">
+            {{ c.fecha|date:"d/m" }}
+            <div class="event-dot" style="background:var(--blue1);"></div>
+          </div>
+          <div class="event-info">
+            <div class="event-title">{{ c.titulo }}</div>
+            <div class="event-meta">
+              <i class="fa-solid fa-users" style="color:var(--blue2);font-size:0.65rem;"></i>
+              {{ c.grupo }}&nbsp;&middot;&nbsp;{{ c.fecha|date:"H:i" }}
+              {% if c.es_recurrente %}
+                <span class="kiwi-badge badge-yellow" style="margin-left:0.3rem;">
+                  <i class="fa-solid fa-rotate"></i> Recurrente
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="fa-solid fa-calendar-xmark"></i></div>
+          <h4>Sin clases proximas</h4>
+          <p><a href="/calendario/" style="color:var(--blue2);font-weight:700;">Agrega una clase</a> al calendario</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Tareas -->
+  <div class="col-md-4">
+    <div class="kiwi-card h-100">
+      <div class="kiwi-card-header">
+        <h5 class="kiwi-card-title">
+          <i class="fa-solid fa-list-check"></i> Lista de tareas
+        </h5>
+        <a href="/tareas/" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+          <i class="fa-solid fa-arrow-right"></i> Ver todo
+        </a>
+      </div>
+      <div class="kiwi-card-body" style="padding-top:0;">
+        {% if tareas %}
+          {% for t in tareas %}
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0;border-bottom:1px solid var(--border);">
+            <div>
+              {% if t.estado == 'completada' %}
+                <i class="fa-solid fa-circle-check" style="color:var(--success);font-size:1rem;"></i>
+              {% elif t.estado == 'en_proceso' %}
+                <i class="fa-solid fa-circle-half-stroke" style="color:var(--blue2);font-size:1rem;"></i>
+              {% else %}
+                <i class="fa-regular fa-circle" style="color:var(--text-muted);font-size:1rem;"></i>
+              {% endif %}
+            </div>
+            <span style="flex:1;font-size:0.86rem;font-weight:600;{% if t.estado == 'completada' %}text-decoration:line-through;color:var(--text-muted);{% endif %}">
+              {{ t.titulo }}
+            </span>
+            {% if t.plazo %}
+            <span class="kiwi-badge badge-blue">{{ t.plazo|date:"d/m" }}</span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+            <h4>Sin tareas pendientes</h4>
+            <p><a href="/tareas/" style="color:var(--blue2);font-weight:700;">Crea tu primera tarea</a></p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}{% endwith %}

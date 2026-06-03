@@ -1,0 +1,234 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KIWI — Registro</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#122666 0%,#35458f 50%,#6a80e2 100%);min-height:100vh;display:flex;flex-direction:column;}
+nav{display:flex;align-items:center;padding:1rem 2rem;gap:1rem;flex-wrap:wrap;}
+nav a{text-decoration:none;color:rgba(255,255,255,0.85);font-weight:700;font-size:0.9rem;transition:color 0.2s;}
+nav a:hover{color:white;}
+.nav-logo{display:flex;align-items:center;gap:0.5rem;font-size:1.15rem;letter-spacing:2px;color:white!important;}
+.nav-links{display:flex;gap:2rem;margin:0 1.5rem;}
+.nav-right{margin-left:auto;display:flex;gap:0.5rem;}
+.nbtn{padding:0.4rem 1.1rem;border-radius:20px;font-weight:700;font-size:0.82rem;text-decoration:none;transition:all 0.2s;}
+.nbtn.outline{border:2px solid rgba(255,255,255,0.5);color:white;}
+.nbtn.filled{background:#35458f;color:white;border:2px solid #35458f;}
+.nbtn:hover{opacity:0.85;}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;gap:3rem;flex-wrap:wrap;}
+.kleit-side{color:white;max-width:280px;}
+.kleit-side .big-cat{display:block;width:450px;height:auto;animation:float 3s ease-in-out infinite;margin-top:-7rem;margin-left:-7rem;filter:drop-shadow(0 16px 32px rgba(0,0,0,0.35));}
+.kleit-side .bubble{background:white;color:#35458f;border-radius:20px 20px 20px 4px;padding:0.85rem 1.25rem;font-size:0.88rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.2);line-height:1.5;}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.auth-card{background:#35458f;border-radius:20px;padding:2.25rem;width:100%;max-width:460px;color:white;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.auth-card h1{font-size:1.9rem;font-weight:900;text-align:center;margin-bottom:0.2rem;}
+.auth-card .sub{text-align:center;opacity:0.7;font-size:0.82rem;margin-bottom:1.5rem;line-height:1.4;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+.form-group{margin-bottom:0.9rem;}
+label{display:block;font-size:0.79rem;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:0.25rem;}
+input[type="email"],input[type="password"],input[type="text"]{
+  width:100%;padding:0.65rem 0.9rem;
+  background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.25);
+  border-radius:10px;color:white;font-family:'Nunito',sans-serif;font-size:0.88rem;
+  transition:all 0.2s;outline:none;
+}
+input:focus{border-color:#6a80e2;background:rgba(255,255,255,0.16);}
+input::placeholder{color:rgba(255,255,255,0.4);}
+.submit-btn{width:100%;padding:0.8rem;border-radius:12px;border:none;background:#6a80e2;color:white;font-family:'Nunito',sans-serif;font-size:0.95rem;font-weight:800;cursor:pointer;margin-top:0.5rem;transition:all 0.2s;}
+.submit-btn:hover{background:#7a90f2;transform:translateY(-1px);}
+.auth-footer{text-align:center;margin-top:1rem;font-size:0.83rem;opacity:0.75;}
+.auth-footer a{color:#a0b4f0;font-weight:700;text-decoration:none;}
+.auth-footer a:hover{color:white;}
+.step-indicator{display:flex;gap:0.4rem;justify-content:center;margin-bottom:1.5rem;}
+.step-dot{height:8px;border-radius:4px;background:rgba(255,255,255,0.25);transition:all 0.3s;}
+.step-dot.active{background:#6a80e2;width:28px;}
+.step-dot.done{background:rgba(255,255,255,0.5);width:10px;}
+.step-dot:not(.active):not(.done){width:10px;}
+.checkbox-group{display:flex;align-items:flex-start;gap:0.5rem;margin-bottom:0.6rem;}
+.checkbox-group input[type="checkbox"]{width:16px;height:16px;cursor:pointer;flex-shrink:0;margin-top:2px;accent-color:#6a80e2;}
+.checkbox-group label{margin:0;font-size:0.81rem;opacity:0.85;cursor:pointer;}
+.terms-link{background:none;border:none;padding:0;color:#a0b4f0;text-decoration:underline;font-family:'Nunito',sans-serif;font-size:0.81rem;cursor:pointer;font-weight:700;}
+.terms-link:hover{color:white;}
+.error-box{background:rgba(239,83,80,0.2);border:1px solid rgba(239,83,80,0.5);border-radius:10px;padding:0.7rem 1rem;font-size:0.84rem;color:#ffb3b3;margin-bottom:1rem;}
+.step-title{font-size:0.8rem;opacity:0.6;text-align:center;margin-bottom:1rem;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-hidden{display:none!important;}
+.modal-box{background:#fff;color:#111;border-radius:16px;width:100%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.4);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #e5e7eb;flex-shrink:0;}
+.modal-header h2{font-size:1.1rem;font-weight:800;color:#122666;}
+.modal-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:#666;line-height:1;padding:0.25rem;}
+.modal-close:hover{color:#111;}
+.modal-body{overflow-y:auto;padding:1.5rem;flex:1;}
+.modal-body h3{font-size:0.85rem;font-weight:800;color:#122666;margin:1.25rem 0 0.4rem;text-transform:uppercase;letter-spacing:0.4px;}
+.modal-body h3:first-child{margin-top:0;}
+.modal-body p{font-size:0.875rem;color:#444;line-height:1.75;margin-bottom:0.5rem;}
+.modal-body .vigencia{font-size:0.8rem;color:#888;margin-bottom:1rem;}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid #e5e7eb;flex-shrink:0;text-align:right;}
+.modal-btn{background:#122666;color:#fff;border:none;padding:0.65rem 1.75rem;border-radius:10px;font-family:'Nunito',sans-serif;font-weight:800;font-size:0.9rem;cursor:pointer;transition:background 0.2s;}
+.modal-btn:hover{background:#35458f;}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="{% static 'kiwi/img/Logokiwi.png' %}" alt="KIWI" style="width:36px;height:36px;object-fit:contain;">
+    KIWI
+  </a>
+  <div class="nav-links">
+    <a href="/">Inicio</a>
+    <a href="/sobre-kiwi/">Sobre KIWI</a>
+    <a href="/sobre-kleit/">Sobre Kleit</a>
+  </div>
+  <div class="nav-right">
+    <a href="/login/" class="nbtn outline">Iniciar Sesión</a>
+    <a href="/registro/" class="nbtn filled">Registrarse</a>
+  </div>
+</nav>
+<div class="main">
+  <div class="kleit-side">
+    <img src="{% static 'kiwi/img/register.png' %}" alt="KIWI" class="big-cat">
+    <div class="bubble">
+      {% if step == 2 %}
+        Casi listo, {{ nombre }}! Ahora crea tus datos de acceso.
+      {% else %}
+        Para acceder a los servicios de KIWI primero tienes que registrarte.
+      {% endif %}
+    </div>
+  </div>
+  <div class="auth-card">
+    {% if verificacion_enviada %}
+    <div style="text-align:center;padding:1rem 0;">
+      <div style="font-size:2.5rem;margin-bottom:1rem;">📬</div>
+      <h1 style="font-size:1.5rem;margin-bottom:0.5rem;">¡Revisa tu correo!</h1>
+      <p style="opacity:0.8;font-size:0.87rem;line-height:1.6;margin-bottom:1.5rem;">
+        Enviamos un código de 6 dígitos a <strong>{{ correo }}</strong>.<br>
+        Ingrésalo en la siguiente pantalla para activar tu cuenta.
+      </p>
+      <a href="/verificar-email/?correo={{ correo }}" class="submit-btn" style="display:block;text-decoration:none;margin-bottom:0.75rem;">
+        Ingresar mi código →
+      </a>
+      <a href="/login/" style="color:#a0b4f0;font-size:0.82rem;font-weight:700;">Volver al inicio de sesión</a>
+    </div>
+    {% else %}
+    <h1>Registro</h1>
+    <div class="sub">Los campos marcados con (*) son obligatorios</div>
+    <div class="step-indicator">
+      <div class="step-dot {% if step == 1 %}active{% else %}done{% endif %}"></div>
+      <div class="step-dot {% if step == 2 %}active{% endif %}"></div>
+    </div>
+    <div class="step-title">Paso {{ step }} de 2 — {% if step == 1 %}Datos personales{% else %}Datos de acceso{% endif %}</div>
+    {% if error %}
+    <div class="error-box">{{ error }}</div>
+    {% endif %}
+    {% if step == 1 %}
+    <form method="post" action="/registro/">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="1">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombres *</label>
+          <input type="text" name="nombres" placeholder="Tus nombres" required autocomplete="given-name">
+        </div>
+        <div class="form-group">
+          <label>Apellidos</label>
+          <input type="text" name="apellidos" placeholder="Tus apellidos" autocomplete="family-name">
+        </div>
+      </div>
+      <button type="submit" class="submit-btn">Siguiente</button>
+    </form>
+    {% else %}
+    <form method="post" action="/registro/">
+      {% csrf_token %}
+      <input type="hidden" name="step" value="2">
+      <div class="form-group">
+        <label>Correo Electrónico *</label>
+        <input type="email" name="correo" placeholder="tucorreo@gmail.com" required autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Contraseña * (minimo 8 caracteres)</label>
+        <input type="password" name="password" placeholder="Crea una contraseña segura" required autocomplete="new-password" minlength="8">
+      </div>
+      <div class="form-group">
+        <label>Confirmar contraseña *</label>
+        <input type="password" name="confirm_password" placeholder="Repite tu contraseña" required autocomplete="new-password">
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" name="acepto_terminos" id="terminos" required>
+        <label for="terminos">Acepto los <button type="button" class="terms-link" onclick="abrirTerminos()">términos y condiciones</button> *</label>
+      </div>
+      <button type="submit" class="submit-btn">Crear cuenta</button>
+    </form>
+    {% endif %}
+    {% if not verificacion_enviada %}
+    <div class="auth-footer">
+      Ya tienes cuenta? <a href="/login/">Inicia sesión aqui</a>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+<!-- MODAL TÉRMINOS Y CONDICIONES -->
+<div id="modalTerminos" class="modal-overlay modal-hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Términos y Condiciones de Uso</h2>
+      <button class="modal-close" onclick="cerrarTerminos()" aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="vigencia">Vigencia: 27/05/2026</p>
+
+      <h3>1. Aceptación de los Términos</h3>
+      <p>Al crear una cuenta o sesión de usuario en cualquier servicio proporcionado por Kiwi (en adelante, "la Plataforma" o "Kiwi"), usted acepta plenamente y sin reservas los siguientes Términos y Condiciones de Uso (en adelante, "los Términos"). Si no está de acuerdo con estos Términos, no debe crear una cuenta ni utilizar la Plataforma.</p>
+
+      <h3>2. Elegibilidad de la Cuenta</h3>
+      <p>Usted declara ser mayor de edad legal en su jurisdicción o tener el consentimiento de un padre o tutor legal para utilizar la Plataforma.</p>
+      <p>Usted se compromete a proporcionar información verdadera, precisa, actual y completa al crear su cuenta y a mantener dicha información actualizada.</p>
+
+      <h3>3. Responsabilidad y Seguridad de la Cuenta</h3>
+      <p>Usted es el único responsable de mantener la confidencialidad de su contraseña y de todas las actividades que ocurran bajo su cuenta.</p>
+      <p>Usted acepta notificar inmediatamente a Kiwi sobre cualquier uso no autorizado de su cuenta o cualquier otra violación de seguridad.</p>
+      <p>Kiwi no será responsable de ninguna pérdida o daño que surja del incumplimiento de estas obligaciones de seguridad por parte del usuario.</p>
+
+      <h3>4. Uso Aceptable de la Plataforma</h3>
+      <p>Usted se compromete a no utilizar la Plataforma para:</p>
+      <p>Cualquier actividad ilegal o que infrinja los derechos de terceros.</p>
+      <p>Transmitir material dañino, difamatorio, obsceno u objetable de cualquier otra manera.</p>
+      <p>Intentar obtener acceso no autorizado a otros sistemas o redes de la Plataforma.</p>
+      <p>Kiwi se reserva el derecho de eliminar o suspender cuentas que incumplan este punto sin previo aviso.</p>
+
+      <h3>5. Propiedad Intelectual</h3>
+      <p>Todo el contenido, las características y la funcionalidad de la Plataforma (incluidos, entre otros, la información, el software, el texto, las imágenes, el vídeo y el audio) son propiedad exclusiva de Kiwi o de sus licenciantes y están protegidos por las leyes de propiedad intelectual.</p>
+      <p>Al subir contenido a la Plataforma, usted otorga a Kiwi una licencia mundial, no exclusiva, libre de regalías para usar, reproducir, modificar y distribuir dicho contenido únicamente para operar y mejorar la Plataforma.</p>
+
+      <h3>6. Limitación de Responsabilidad</h3>
+      <p>Kiwi proporciona la Plataforma "tal cual" y no ofrece ninguna garantía, expresa o implícita, sobre su funcionamiento o disponibilidad. En la medida máxima permitida por la ley aplicable, Kiwi no será responsable de daños indirectos, incidentales, especiales, consecuentes o punitivos que resulten del uso o la incapacidad de usar la Plataforma.</p>
+
+      <h3>7. Modificaciones a los Términos</h3>
+      <p>Kiwi se reserva el derecho, a su entera discreción, de modificar o reemplazar estos Términos en cualquier momento. Se considera que la continuación del uso de la Plataforma después de la publicación de los Términos revisados constituye la aceptación de dichos cambios.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="cerrarTerminos()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function abrirTerminos() {
+  document.getElementById('modalTerminos').classList.remove('modal-hidden');
+  document.body.style.overflow = 'hidden';
+}
+function cerrarTerminos() {
+  document.getElementById('modalTerminos').classList.add('modal-hidden');
+  document.body.style.overflow = '';
+}
+document.getElementById('modalTerminos').addEventListener('click', function(e) {
+  if (e.target === this) cerrarTerminos();
+});
+</script>
+</body>
+</html>

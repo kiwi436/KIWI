@@ -1,0 +1,596 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| Clases Guardadas{% endblock %}
+{% block topbar_icon %}folder-open{% endblock %}
+{% block topbar_title %}Clases Guardadas{% endblock %}
+{% with active='ideas' %}
+{% block content %}
+
+<style>
+/* ── FILTER BAR ── */
+.filter-bar {
+  padding: 0.75rem 1rem;
+  border-bottom: 1.5px solid var(--border);
+}
+.filter-search-wrap {
+  display: flex; align-items: center; gap: 0.55rem;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 0 0.75rem;
+  transition: border-color var(--transition);
+  max-width: 320px;
+}
+.filter-search-wrap:focus-within { border-color: var(--blue2); }
+.filter-search-wrap i { color: var(--text-muted); font-size: 0.72rem; flex-shrink: 0; }
+.filter-search-wrap select {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 0.8rem; font-weight: 600; color: var(--text);
+  padding: 0.5rem 0; cursor: pointer; font-family: inherit;
+  appearance: none; -webkit-appearance: none;
+}
+
+/* ── IDEA LIST ROW ── */
+.idea-row {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background var(--transition);
+}
+.idea-row:last-child { border-bottom: none; }
+.idea-row:hover { background: var(--blue-bg); }
+.idea-row-icon {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  background: rgba(106,128,226,0.12); color: var(--blue2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+}
+.idea-row-body { flex: 1; min-width: 0; }
+.idea-row-title {
+  font-size: 0.86rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 0.15rem;
+}
+.idea-row-sub {
+  font-size: 0.71rem; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.idea-row-meta {
+  display: flex; align-items: center; gap: 0.45rem;
+  flex-shrink: 0; text-align: right;
+}
+.idea-row-arrow { color: var(--border); font-size: 0.68rem; flex-shrink: 0; }
+
+/* ── MODAL SECTIONS ── */
+.idea-modal-desc {
+  font-size: 0.84rem; color: var(--text-muted); font-style: italic;
+  line-height: 1.6; margin-bottom: 0.9rem;
+}
+.idea-modal-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.modal-divider { border: none; border-top: 1.5px solid var(--border); margin: 0.85rem 0; }
+.exp-section { margin-bottom: 0.85rem; }
+.exp-section:last-child { margin-bottom: 0; }
+.exp-section-label {
+  font-size: 0.65rem; font-weight: 800; color: var(--blue2);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 0.35rem;
+  display: flex; align-items: center; gap: 0.3rem;
+}
+.exp-item {
+  font-size: 0.81rem; color: var(--text); line-height: 1.55;
+  padding: 0.18rem 0 0.18rem 0.8rem;
+  border-left: 2px solid var(--border);
+  margin-bottom: 0.22rem;
+}
+.exp-plain { font-size: 0.82rem; color: var(--text); line-height: 1.5; }
+.exp-box {
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 0.85rem 1rem;
+}
+.recurso-item {
+  display: flex; align-items: flex-start; gap: 0.55rem;
+  padding: 0.45rem 0; border-bottom: 1px solid var(--border);
+  font-size: 0.8rem; color: var(--text); line-height: 1.45;
+}
+.recurso-item:last-child { border-bottom: none; }
+.recurso-item i { color: var(--blue2); flex-shrink: 0; margin-top: 2px; font-size: 0.72rem; }
+
+/* ── EMPTY STATE ── */
+.ideas-empty { text-align: center; padding: 3.5rem 2rem; }
+.ideas-empty-icon {
+  font-size: 2.4rem; color: var(--blue2); opacity: 0.25; margin-bottom: 0.75rem;
+}
+
+/* ── CICLO TABS ── */
+.ciclo-tabs {
+  display: flex; gap: 0; flex-wrap: nowrap;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 0.3rem; margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+.ciclo-tab {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1.1rem; border-radius: 10px;
+  font-size: 0.78rem; font-weight: 800;
+  color: var(--text-muted); cursor: pointer;
+  transition: all 0.18s; white-space: nowrap;
+  border: 1.5px solid transparent; background: none;
+  font-family: var(--font);
+}
+.ciclo-tab:hover { background: var(--blue-bg); color: var(--blue1); }
+.ciclo-tab.active {
+  background: linear-gradient(135deg, rgba(106,128,226,0.15), rgba(53,69,143,0.08));
+  color: var(--blue1); border-color: rgba(106,128,226,0.3);
+}
+[data-theme="dark"] .ciclo-tab.active { color: var(--blue2); }
+
+/* ── SECCIÓN DE GRADO ── */
+.grado-section { margin-bottom: 1.5rem; }
+.grado-header {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem; margin-bottom: 0.4rem;
+  border-left: 3px solid var(--blue2);
+  font-size: 0.8rem; font-weight: 800; color: var(--blue1);
+}
+[data-theme="dark"] .grado-header { color: var(--blue2); }
+.grado-count {
+  margin-left: auto; background: var(--blue-bg);
+  border: 1.5px solid var(--border); border-radius: 20px;
+  padding: 0.1rem 0.55rem; font-size: 0.68rem;
+  font-weight: 800; color: var(--text-muted);
+}
+</style>
+
+<!-- HERO -->
+<div class="kiwi-hero">
+  <div style="position:relative;z-index:1;">
+    <h1><i class="fa-solid fa-folder-open" style="font-size:1.1rem;margin-right:0.5rem;"></i>Clases Guardadas</h1>
+    <p>Exporta cada actividad como un Plan de Clase PDF listo para usar</p>
+  </div>
+  <div style="position:relative;z-index:1;margin-left:auto;">
+    <a href="/kleit/" class="btn-kiwi btn-kiwi-blue">
+      <i class="fa-solid fa-wand-magic-sparkles"></i> Generar más ideas
+    </a>
+  </div>
+  <i class="fa-solid fa-file-lines" style="position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:0.1;"></i>
+</div>
+
+{% if ideas %}
+
+<div style="margin-bottom:1rem;">
+  <span style="font-size:0.81rem;color:var(--text-muted);">
+    <i class="fa-solid fa-layer-group" style="color:var(--blue2);margin-right:0.3rem;font-size:0.7rem;"></i>
+    <span id="countVisible">{{ ideas|length }}</span>
+    clase{% if ideas|length != 1 %}s{% endif %} guardada{% if ideas|length != 1 %}s{% endif %}
+  </span>
+</div>
+
+<!-- CICLO TABS + BUSCADOR DE GRADO -->
+<div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+  <div class="ciclo-tabs" style="margin-bottom:0;flex:1;min-width:0;">
+    <button class="ciclo-tab active" onclick="setCiclo('todos', this)">
+      <i class="fa-solid fa-layer-group"></i> Todos
+    </button>
+    <button class="ciclo-tab" onclick="setCiclo('primaria', this)">
+      <i class="fa-solid fa-child"></i> Primaria
+      <span style="font-size:0.6rem;opacity:0.7;">(1° – 5°)</span>
+    </button>
+    <button class="ciclo-tab" onclick="setCiclo('bachillerato', this)">
+      <i class="fa-solid fa-graduation-cap"></i> Bachillerato
+      <span style="font-size:0.6rem;opacity:0.7;">(6° – 11°)</span>
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:0.4rem;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:0.3rem 0.6rem;transition:border-color 0.18s;" id="gradoSearchWrap">
+    <i class="fa-solid fa-magnifying-glass" style="color:var(--text-muted);font-size:0.72rem;flex-shrink:0;"></i>
+    <select id="gradoSearch" onchange="setGrado(this.value)"
+            style="background:none;border:none;outline:none;font-size:0.78rem;font-weight:700;color:var(--text);font-family:var(--font);cursor:pointer;padding:0.15rem 0;min-width:140px;">
+      <option value="">Todos los grados</option>
+      <optgroup label="Primaria">
+        <option>1° Primaria</option>
+        <option>2° Primaria</option>
+        <option>3° Primaria</option>
+        <option>4° Primaria</option>
+        <option>5° Primaria</option>
+      </optgroup>
+      <optgroup label="Bachillerato">
+        <option>6° Bachillerato</option>
+        <option>7° Bachillerato</option>
+        <option>8° Bachillerato</option>
+        <option>9° Bachillerato</option>
+        <option>10° Bachillerato</option>
+        <option>11° Bachillerato</option>
+      </optgroup>
+    </select>
+  </div>
+</div>
+
+<!-- IDEAS AGRUPADAS POR GRADO -->
+<div id="ideasGrouped"></div>
+
+{% else %}
+
+<div class="kiwi-card ideas-empty">
+  <div class="ideas-empty-icon"><i class="fa-solid fa-bookmark"></i></div>
+  <h3 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:0.4rem;">Aún no tienes clases guardadas</h3>
+  <p style="color:var(--text-muted);font-size:0.84rem;margin-bottom:1.5rem;">
+    Ve a Kleit, genera actividades y guárdalas aquí para exportarlas como Plan de Clase PDF.
+  </p>
+  <a href="/kleit/" class="btn-kiwi btn-kiwi-blue">
+    <i class="fa-solid fa-wand-magic-sparkles"></i> Ir a Kleit
+  </a>
+</div>
+
+{% endif %}
+
+<!-- MODAL: Detalle de clase -->
+<div class="kiwi-modal-overlay" id="ideaModalOverlay"
+     onclick="if(event.target===this)closeIdeaModal()">
+  <div class="kiwi-modal" style="max-width:600px;max-height:88vh;overflow-y:auto;">
+    <div id="ideaModalContent"></div>
+  </div>
+</div>
+
+<!-- MODAL: Datos para exportar PDF -->
+<div class="kiwi-modal-overlay" id="exportarModalOverlay"
+     onclick="if(event.target===this)cerrarModalExportar()">
+  <div class="kiwi-modal" style="max-width:460px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <div>
+        <h3 style="margin:0;font-size:1rem;font-weight:800;">
+          <i class="fa-solid fa-file-pdf" style="color:var(--blue2);margin-right:0.4rem;font-size:0.9rem;"></i>
+          Generar Plan de Clase PDF
+        </h3>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:0.2rem 0 0;">Completa los datos antes de generar el PDF</p>
+      </div>
+      <button onclick="cerrarModalExportar()"
+              style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-muted);">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <form method="post" id="formExportar" action="/kleit/exportar-clase/0/">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="kiwi-form-label">Tema de la clase *</label>
+        <input type="text" name="tema" id="exportTema" class="kiwi-input"
+               placeholder="Ej: Superación del Duelo" required>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
+        <div>
+          <label class="kiwi-form-label">Semana *</label>
+          <input type="number" name="semana" id="exportSemana" class="kiwi-input"
+                 placeholder="Ej: 1" min="1" max="40" required>
+        </div>
+        <div>
+          <label class="kiwi-form-label">Fecha *</label>
+          <input type="text" name="fecha" id="exportFecha" class="kiwi-input"
+                 placeholder="Ej: 23 – 27 marzo 2026" required>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.65rem;justify-content:flex-end;margin-top:1.25rem;">
+        <button type="button" class="btn-kiwi btn-kiwi-ghost" onclick="cerrarModalExportar()">Cancelar</button>
+        <button type="submit" class="btn-kiwi btn-kiwi-primary">
+          <i class="fa-solid fa-file-arrow-down"></i> Generar y descargar PDF
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Datos embebidos ──────────────────────────────────────────────
+const IDEAS = {
+  {% for idea in ideas %}
+  {{ idea.pk }}: {
+    id: {{ idea.pk }},
+    titulo:      "{{ idea.titulo|escapejs }}",
+    descripcion: "{{ idea.descripcion|escapejs }}",
+    tema:        "{{ idea.tema_original|escapejs }}",
+    grupo:       "{{ idea.grupo_original|escapejs }}",
+    expansion:   "{{ idea.expansion|escapejs }}",
+    recursosRaw: "{{ idea.recursos_sugeridos|default:'[]'|escapejs }}",
+    clase:       "{{ idea.usada_en_clase.titulo|default:''|escapejs }}",
+    fecha:       "{{ idea.created_at|date:'d/m/Y' }}"
+  }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+};
+
+const CLASES = [
+  {% for c in clases %}
+  { pk: {{ c.pk }}, titulo: "{{ c.titulo|escapejs }}", grupo: "{{ c.grupo|escapejs }}" }{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+
+// ── Orden de grados ───────────────────────────────────────────────
+const GRADOS_PRIMARIA     = ['1° Primaria','2° Primaria','3° Primaria','4° Primaria','5° Primaria'];
+const GRADOS_BACHILLERATO = ['6° Bachillerato','7° Bachillerato','8° Bachillerato','9° Bachillerato','10° Bachillerato','11° Bachillerato'];
+const GRADOS_ORDEN        = [...GRADOS_PRIMARIA, ...GRADOS_BACHILLERATO];
+
+let cicloActual = 'todos';
+let gradoActual  = '';
+
+// ── Agrupación y renderizado ──────────────────────────────────────
+function renderGrupos(ciclo, grado) {
+  if (ciclo  !== undefined) cicloActual = ciclo;
+  if (grado  !== undefined) gradoActual  = grado;
+  const todas = Object.values(IDEAS);
+
+  // Agrupar por grupo_original
+  const mapa = {};
+  todas.forEach(d => {
+    const g = d.grupo || 'Sin grado';
+    if (!mapa[g]) mapa[g] = [];
+    mapa[g].push(d);
+  });
+
+  // Ordenar grados según GRADOS_ORDEN; los no reconocidos van al final
+  const gradosOrdenados = [
+    ...GRADOS_ORDEN.filter(g => mapa[g]),
+    ...Object.keys(mapa).filter(g => !GRADOS_ORDEN.includes(g)),
+  ];
+
+  // Filtrar por ciclo y/o grado específico
+  const gradosFiltrados = gradosOrdenados.filter(g => {
+    if (gradoActual) return g === gradoActual;
+    if (cicloActual === 'primaria')     return GRADOS_PRIMARIA.includes(g);
+    if (cicloActual === 'bachillerato') return GRADOS_BACHILLERATO.includes(g);
+    return true;
+  });
+
+  const container = document.getElementById('ideasGrouped');
+  if (!gradosFiltrados.length) {
+    container.innerHTML = `<div class="kiwi-card ideas-empty">
+      <div class="ideas-empty-icon"><i class="fa-solid fa-filter-circle-xmark"></i></div>
+      <p style="color:var(--text-muted);font-size:0.84rem;margin:0;">No hay clases guardadas para este ciclo.</p>
+    </div>`;
+    actualizarContador(0);
+    return;
+  }
+
+  let total = 0;
+  let html = '';
+  gradosFiltrados.forEach(grado => {
+    const ideas = mapa[grado];
+    total += ideas.length;
+    html += `<div class="grado-section">
+      <div class="grado-header">
+        <i class="fa-solid fa-users" style="font-size:0.72rem;"></i>
+        ${escHtml(grado)}
+        <span class="grado-count">${ideas.length}</span>
+      </div>
+      <div class="kiwi-card" style="padding:0;overflow:hidden;margin-bottom:0;">
+        ${ideas.map(renderFilaIdea).join('')}
+      </div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+  actualizarContador(total);
+}
+
+function renderFilaIdea(d) {
+  return `<div class="idea-row" onclick="openIdeaModal(${d.id})">
+    <div class="idea-row-icon"><i class="fa-solid fa-file-lines"></i></div>
+    <div class="idea-row-body">
+      <div class="idea-row-title">${escHtml(d.titulo)}</div>
+      <div class="idea-row-sub">${escHtml((d.descripcion || '').substring(0,72))}${(d.descripcion||'').length>72?'…':''}</div>
+    </div>
+    <div class="idea-row-meta">
+      ${d.clase ? `<span class="kiwi-badge badge-green" title="Asignada a ${escHtml(d.clase)}"><i class="fa-solid fa-calendar-check" style="font-size:0.55rem;"></i></span>` : ''}
+    </div>
+    <div class="idea-row-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+  </div>`;
+}
+
+function actualizarContador(n) {
+  const el = document.getElementById('countVisible');
+  if (el) el.textContent = n;
+}
+
+function setCiclo(ciclo, btn) {
+  document.querySelectorAll('.ciclo-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('gradoSearch').value = '';
+  renderGrupos(ciclo, '');
+}
+
+function setGrado(grado) {
+  // Al filtrar por grado específico, desactivar los tabs de ciclo
+  if (grado) {
+    document.querySelectorAll('.ciclo-tab').forEach(t => t.classList.remove('active'));
+  } else {
+    // Sin grado → volver a "Todos"
+    document.querySelector('.ciclo-tab').classList.add('active');
+    cicloActual = 'todos';
+  }
+  renderGrupos(undefined, grado);
+}
+
+// Inicializar
+renderGrupos('todos', '');
+
+// ── Parser de expansión ──────────────────────────────────────────
+const SECTION_MAP = {
+  'Duracion:':             { icon: 'clock',           label: 'Duración',             tipo: 'plain' },
+  'Materiales necesarios:':{ icon: 'box-archive',     label: 'Materiales',           tipo: 'items' },
+  'Desarrollo paso a paso:':{ icon: 'list-ol',        label: 'Desarrollo',           tipo: 'items' },
+  'Preguntas de reflexion:':{ icon: 'circle-question',label: 'Preguntas de reflexión',tipo: 'items' },
+  'Indicador de logro:':   { icon: 'chart-simple',    label: 'Indicador de logro',   tipo: 'plain' },
+  'Adaptaciones:':         { icon: 'sliders',         label: 'Adaptaciones',         tipo: 'items' },
+};
+
+function parseExpansion(text) {
+  if (!text) return '';
+  const lines = text.split(/\n/);
+  const sections = [];
+  let cur = null;
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    const key = Object.keys(SECTION_MAP).find(k => t.startsWith(k));
+    if (key) {
+      if (cur) sections.push(cur);
+      const rest = t.slice(key.length).trim();
+      cur = { ...SECTION_MAP[key], items: rest ? [rest] : [] };
+    } else if (cur) {
+      // Strip leading dash/number marker and keep the content
+      cur.items.push(t.replace(/^[-•]\s*/, '').replace(/^(\d+)\.\s*/, '<strong>$1.</strong> '));
+    }
+  }
+  if (cur) sections.push(cur);
+
+  return sections.map(s => {
+    const body = s.tipo === 'items'
+      ? s.items.map(i => `<div class="exp-item">${i}</div>`).join('')
+      : `<div class="exp-plain">${s.items.join(' ')}</div>`;
+    return `<div class="exp-section">
+      <div class="exp-section-label">
+        <i class="fa-solid fa-${s.icon}" style="font-size:0.62rem;"></i>${s.label}
+      </div>${body}
+    </div>`;
+  }).join('');
+}
+
+// ── Modal ────────────────────────────────────────────────────────
+function openIdeaModal(pk) {
+  const d = IDEAS[pk];
+  if (!d) return;
+
+  let recursos = [];
+  try { recursos = JSON.parse(d.recursosRaw); } catch(e) {}
+
+  const expansionHtml = parseExpansion(d.expansion);
+  const claseHtml = d.clase
+    ? `<span class="kiwi-badge badge-green"><i class="fa-solid fa-calendar-check" style="font-size:0.55rem;"></i> ${d.clase}</span>`
+    : '';
+  const temaHtml = d.tema
+    ? `<span class="kiwi-badge" style="background:var(--blue-bg);color:var(--blue1);border:1.5px solid var(--border);">${d.tema}</span>`
+    : '';
+  const recursosHtml = recursos.length ? `
+    <hr class="modal-divider">
+    <div style="margin-bottom:0.65rem;">
+      <div class="exp-section-label" style="margin-bottom:0.5rem;">
+        <i class="fa-solid fa-link" style="font-size:0.62rem;"></i>Recursos digitales
+      </div>
+      <div style="border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;padding:0 0.85rem;">
+        ${recursos.map(r => `<div class="recurso-item"><i class="fa-solid fa-arrow-up-right-from-square"></i><span>${r}</span></div>`).join('')}
+      </div>
+    </div>` : '';
+
+  const claseOptions = CLASES.length
+    ? `<select id="claseSelModal-${pk}" class="kiwi-input"
+          style="max-width:230px;font-size:0.78rem;padding:0.35rem 0.6rem;"
+          onchange="asignarClase(${pk},this.value)">
+        <option value="">Asignar a clase...</option>
+        ${CLASES.map(c => `<option value="${c.pk}">${c.titulo} (${c.grupo})</option>`).join('')}
+       </select>` : '';
+
+  document.getElementById('ideaModalContent').innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:0.75rem;">
+      <h3 style="margin:0;font-size:1rem;font-weight:800;color:var(--text);line-height:1.35;">${d.titulo}</h3>
+      <button onclick="closeIdeaModal()"
+        style="background:none;border:none;font-size:1.15rem;cursor:pointer;color:var(--text-muted);flex-shrink:0;padding:0.1rem;line-height:1;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <p class="idea-modal-desc">${d.descripcion}</p>
+
+    <div class="idea-modal-meta">
+      <span class="kiwi-badge badge-blue">${d.grupo}</span>
+      ${temaHtml}${claseHtml}
+    </div>
+
+    ${expansionHtml ? `<hr class="modal-divider">
+    <div class="exp-section-label" style="margin-bottom:0.55rem;">
+      <i class="fa-solid fa-star" style="font-size:0.62rem;"></i>Actividad completa
+    </div>
+    <div class="exp-box">${expansionHtml}</div>` : ''}
+
+    ${recursosHtml}
+
+    <hr class="modal-divider">
+    <div style="display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;">
+      <button onclick="quitarGuardada(${pk})" class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm">
+        <i class="fa-solid fa-bookmark-slash"></i> Quitar de guardadas
+      </button>
+      <button onclick="abrirModalExportar(${pk})" class="btn-kiwi btn-kiwi-primary btn-kiwi-sm">
+        <i class="fa-solid fa-file-pdf"></i> Exportar Plan de Clase PDF
+      </button>
+      ${claseOptions}
+      <span style="margin-left:auto;font-size:0.68rem;color:var(--text-muted);">
+        <i class="fa-regular fa-calendar" style="margin-right:0.2rem;"></i>${d.fecha}
+      </span>
+    </div>
+  `;
+  document.getElementById('ideaModalOverlay').classList.add('show');
+}
+
+function closeIdeaModal() {
+  document.getElementById('ideaModalOverlay').classList.remove('show');
+}
+
+function quitarGuardada(pk) {
+  fetch(`/kleit/guardar/${pk}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json' }
+  }).then(r => r.json()).then(data => {
+    if (!data.guardada) {
+      closeIdeaModal();
+      const row = document.querySelector(`.idea-row[data-pk="${pk}"]`);
+      if (row) {
+        row.style.transition = 'opacity 0.25s, transform 0.25s';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-8px)';
+        setTimeout(() => {
+          row.remove();
+          const vis = document.querySelectorAll('.idea-row').length;
+          const counter = document.getElementById('countVisible');
+          if (counter) counter.textContent = vis;
+          // Show no-results if list is now empty after filter
+          const filtered = allRows.filter(r => !r.style.opacity);
+          document.getElementById('noResults').style.display =
+            document.querySelectorAll('.idea-row').length === 0 ? '' : 'none';
+        }, 270);
+      }
+    }
+  }).catch(() => {});
+}
+
+function asignarClase(ideaId, claseId) {
+  if (!claseId) return;
+  fetch(`/kleit/asignar/${ideaId}/`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ clase_id: claseId })
+  }).then(r => r.json()).then(data => {
+    if (data.ok) {
+      const sel = document.getElementById(`claseSelModal-${ideaId}`);
+      if (sel) { sel.disabled = true; sel.style.opacity = '0.6'; }
+    }
+  }).catch(() => {});
+}
+
+function getCsrf() {
+  let v = '';
+  document.cookie.split(';').forEach(c => {
+    c = c.trim();
+    if (c.startsWith('csrftoken=')) v = decodeURIComponent(c.slice(10));
+  });
+  return v;
+}
+
+function abrirModalExportar(pk) {
+  document.getElementById('formExportar').action = `/kleit/exportar-clase/${pk}/`;
+  document.getElementById('exportTema').value = '';
+  document.getElementById('exportSemana').value = '';
+  document.getElementById('exportFecha').value = '';
+  document.getElementById('exportarModalOverlay').classList.add('show');
+}
+
+function cerrarModalExportar() {
+  document.getElementById('exportarModalOverlay').classList.remove('show');
+}
+</script>
+
+{% endblock %}{% endwith %}

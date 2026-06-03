@@ -1,0 +1,476 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| Tareas{% endblock %}
+{% block topbar_icon %}list-check{% endblock %}
+{% block topbar_title %}Mis Tareas{% endblock %}
+{% block extra_css %}
+<style>
+.tarea-page{display:grid;grid-template-columns:360px 1fr;gap:1.5rem;align-items:start;}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.stat-pill{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;padding:0.7rem 1.1rem;
+  display:flex;align-items:center;gap:0.6rem;
+  box-shadow:var(--shadow);flex:1;min-width:120px;
+}
+.stat-pill-icon{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.9rem;flex-shrink:0;
+}
+.spi-total{background:rgba(106,128,226,0.12);color:var(--blue2);}
+.spi-pend{background:rgba(245,158,11,0.12);color:#b45309;}
+.spi-proc{background:rgba(18,38,102,0.1);color:var(--blue1);}
+.spi-done{background:rgba(34,197,94,0.12);color:#15803d;}
+[data-theme="dark"] .spi-proc{color:var(--blue2);}
+.stat-pill-val{font-size:1.35rem;font-weight:900;color:var(--text);line-height:1;}
+.stat-pill-lbl{font-size:0.66rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;}
+
+/* Progress bar */
+.progress-wrap{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;padding:0.85rem 1.25rem;margin-bottom:1.5rem;
+  box-shadow:var(--shadow);
+}
+.progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;}
+.progress-label{font-size:0.72rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;display:flex;align-items:center;gap:0.4rem;}
+.progress-label i{color:var(--blue2);}
+.progress-val{font-size:0.82rem;font-weight:900;color:var(--blue2);}
+.progress-track{height:9px;background:var(--border);border-radius:5px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue2),var(--blue3));transition:width 0.6s cubic-bezier(.4,0,.2,1);}
+
+/* Column headers */
+.col-section{margin-bottom:1.25rem;}
+.col-title{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0.55rem 1rem;border-radius:10px;margin-bottom:0.6rem;
+  font-size:0.72rem;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;
+}
+.col-pend{background:rgba(245,158,11,0.1);color:#b45309;}
+.col-proc{background:rgba(106,128,226,0.1);color:var(--blue1);}
+.col-done{background:rgba(34,197,94,0.1);color:#15803d;}
+[data-theme="dark"] .col-proc{color:var(--blue2);}
+.col-cnt{
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:20px;padding:0.1rem 0.55rem;
+  font-size:0.68rem;font-weight:900;color:var(--text-muted);
+}
+
+/* Task row */
+.task-row{
+  display:flex;align-items:center;gap:0.75rem;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:12px;padding:0.8rem 1rem;margin-bottom:0.45rem;
+  box-shadow:var(--shadow);transition:all 0.16s;
+  position:relative;overflow:hidden;
+}
+.task-row::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+}
+.task-row.pend::before{background:#f59e0b;}
+.task-row.proc::before{background:var(--blue2);}
+.task-row.done::before{background:#22c55e;}
+.task-row:hover{border-color:var(--blue2);box-shadow:var(--shadow-lg);}
+.task-row.done-row{opacity:0.6;}
+
+/* Action circle */
+.task-check{
+  width:28px;height:28px;border-radius:50%;
+  border:2px solid var(--border);background:var(--blue-bg);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:all 0.18s;
+  font-size:0.75rem;color:var(--text-muted);
+}
+.task-check:hover{transform:scale(1.12);border-color:var(--blue2);color:var(--blue2);}
+.task-check.done-check{background:#22c55e;border-color:#22c55e;color:white;}
+.task-check.proc-check{background:var(--blue2);border-color:var(--blue2);color:white;}
+
+.task-content{flex:1;min-width:0;}
+.task-name{font-size:0.86rem;font-weight:800;color:var(--text);margin-bottom:0.15rem;}
+.done-row .task-name{text-decoration:line-through;}
+.task-notes{font-size:0.72rem;color:var(--text-muted);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.task-right{display:flex;align-items:center;gap:0.4rem;flex-shrink:0;}
+.task-date{
+  font-size:0.67rem;font-weight:800;padding:0.18rem 0.5rem;border-radius:20px;
+  white-space:nowrap;display:flex;align-items:center;gap:0.25rem;
+}
+.date-ok{background:rgba(34,197,94,0.1);color:#15803d;}
+.date-warn{background:rgba(245,158,11,0.1);color:#b45309;}
+
+.task-actions{display:flex;gap:0.25rem;}
+.tact-btn{
+  background:var(--blue-bg);border:1.5px solid var(--border);
+  border-radius:7px;padding:0.22rem 0.55rem;
+  font-size:0.68rem;font-weight:800;color:var(--text-muted);
+  cursor:pointer;font-family:var(--font);transition:all 0.14s;
+  display:flex;align-items:center;gap:0.25rem;
+}
+.tact-btn:hover{border-color:var(--blue2);color:var(--blue2);}
+.tact-btn.del:hover{border-color:var(--danger);color:var(--danger);background:rgba(239,83,80,0.06);}
+
+.empty-col{
+  text-align:center;padding:1.5rem 1rem;color:var(--text-muted);
+  font-size:0.82rem;background:var(--blue-bg);border-radius:10px;
+  border:1.5px dashed var(--border);
+}
+.empty-col i{display:block;font-size:1.4rem;color:var(--blue2);opacity:0.4;margin-bottom:0.4rem;}
+
+/* Edit modal */
+.edit-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.edit-overlay.show{opacity:1;pointer-events:all;}
+.edit-modal{
+  background:var(--surface);border-radius:18px;padding:1.75rem;
+  width:100%;max-width:460px;box-shadow:var(--shadow-lg);
+  border:1.5px solid var(--border);
+}
+.edit-modal h3{font-size:1rem;font-weight:900;margin-bottom:1.25rem;color:var(--text);}
+
+@media(max-width:860px){.tarea-page{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% with active='tareas' %}
+{% block content %}
+
+<div class="kiwi-hero">
+  <div style="position:relative;z-index:1;">
+    <h1><i class="fa-solid fa-list-check" style="font-size:1.1rem;margin-right:0.5rem;"></i>Mis Tareas</h1>
+    <p>Organiza y da seguimiento a tus pendientes docentes</p>
+  </div>
+  <i class="fa-solid fa-check-double" style="position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:0.1;"></i>
+</div>
+
+<!-- STATS -->
+{% with total=tareas|length %}
+<div class="stats-bar">
+  <div class="stat-pill">
+    <div class="stat-pill-icon spi-total"><i class="fa-solid fa-layer-group"></i></div>
+    <div>
+      <div class="stat-pill-val">{{ total }}</div>
+      <div class="stat-pill-lbl">Total</div>
+    </div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-pill-icon spi-pend"><i class="fa-solid fa-clock"></i></div>
+    <div>
+      <div class="stat-pill-val" id="cnt-pend">—</div>
+      <div class="stat-pill-lbl">Pendientes</div>
+    </div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-pill-icon spi-proc"><i class="fa-solid fa-pen"></i></div>
+    <div>
+      <div class="stat-pill-val" id="cnt-proc">—</div>
+      <div class="stat-pill-lbl">En proceso</div>
+    </div>
+  </div>
+  <div class="stat-pill">
+    <div class="stat-pill-icon spi-done"><i class="fa-solid fa-circle-check"></i></div>
+    <div>
+      <div class="stat-pill-val" id="cnt-done">—</div>
+      <div class="stat-pill-lbl">Completadas</div>
+    </div>
+  </div>
+</div>
+
+{% if total > 0 %}
+<div class="progress-wrap">
+  <div class="progress-header">
+    <span class="progress-label"><i class="fa-solid fa-chart-line"></i> Progreso general</span>
+    <span class="progress-val" id="xp-label">calculando...</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="xp-fill" style="width:0%"></div></div>
+</div>
+{% endif %}
+{% endwith %}
+
+<div class="tarea-page">
+
+  <!-- FORM NUEVA TAREA -->
+  <div class="kiwi-card">
+    <div class="kiwi-card-header">
+      <h2 class="kiwi-card-title">
+        <i class="fa-solid fa-plus"></i> Nueva tarea
+      </h2>
+    </div>
+    <div class="kiwi-card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+
+        <div class="mb-3">
+          <label class="kiwi-form-label">Descripcion *</label>
+          <input type="text" name="titulo" class="kiwi-input"
+                 placeholder="Ej: Preparar actividad de empatia..." required>
+        </div>
+
+        <div class="mb-3">
+          <label class="kiwi-form-label">Estado inicial</label>
+          <select name="estado" class="kiwi-input">
+            <option value="no_empezada">Pendiente</option>
+            <option value="en_proceso">En proceso</option>
+            <option value="completada">Completada</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="kiwi-form-label">Fecha limite</label>
+          <input type="date" name="plazo" class="kiwi-input">
+        </div>
+
+        <div class="mb-3">
+          <label class="kiwi-form-label">Notas (opcional)</label>
+          <textarea name="notas" rows="3" class="kiwi-input"
+                    placeholder="Detalles, materiales, contexto..."></textarea>
+        </div>
+
+        <button type="submit" class="btn-kiwi btn-kiwi-primary" style="width:100%;justify-content:center;">
+          <i class="fa-solid fa-plus"></i> Agregar tarea
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- LISTA DE TAREAS -->
+  <div>
+
+    <!-- PENDIENTES -->
+    <div class="col-section">
+      <div class="col-title col-pend">
+        <span><i class="fa-solid fa-clock" style="margin-right:0.35rem;"></i>Pendiente</span>
+        <span class="col-cnt" id="lbl-pend">—</span>
+      </div>
+      <div id="list-pend">
+        {% for t in tareas %}{% if t.estado == 'no_empezada' %}
+        <div class="task-row pend">
+          <div class="task-check" onclick="moverTarea({{ t.pk }},'en_proceso')" title="Marcar en proceso">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+          <div class="task-content">
+            <div class="task-name">{{ t.titulo }}</div>
+            {% if t.notas %}<div class="task-notes">{{ t.notas|truncatechars:60 }}</div>{% endif %}
+          </div>
+          <div class="task-right">
+            {% if t.plazo %}
+            <span class="task-date date-warn">
+              <i class="fa-solid fa-calendar-days"></i>{{ t.plazo|date:"d/m" }}
+            </span>
+            {% endif %}
+            <div class="task-actions">
+              <button class="tact-btn" onclick="moverTarea({{ t.pk }},'en_proceso')">
+                <i class="fa-solid fa-play"></i> Iniciar
+              </button>
+              <button class="tact-btn" onclick="abrirEditar({{ t.pk }}, '{{ t.titulo|escapejs }}', '{{ t.notas|default:''|escapejs }}', '{% if t.plazo %}{{ t.plazo|date:'Y-m-d' }}{% endif %}', '{{ t.estado }}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="pk" value="{{ t.pk }}">
+                <button type="submit" class="tact-btn del"
+                        onclick="return confirm('Eliminar esta tarea?')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}{% endfor %}
+        {% if not tareas %}
+        <div class="empty-col">
+          <i class="fa-solid fa-inbox"></i>
+          Sin tareas pendientes — agrega tu primera tarea
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- EN PROCESO -->
+    <div class="col-section">
+      <div class="col-title col-proc">
+        <span><i class="fa-solid fa-pen" style="margin-right:0.35rem;"></i>En proceso</span>
+        <span class="col-cnt" id="lbl-proc">—</span>
+      </div>
+      <div id="list-proc">
+        {% for t in tareas %}{% if t.estado == 'en_proceso' %}
+        <div class="task-row proc">
+          <div class="task-check proc-check" onclick="moverTarea({{ t.pk }},'completada')" title="Completar">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div class="task-content">
+            <div class="task-name">{{ t.titulo }}</div>
+            {% if t.notas %}<div class="task-notes">{{ t.notas|truncatechars:60 }}</div>{% endif %}
+          </div>
+          <div class="task-right">
+            {% if t.plazo %}
+            <span class="task-date date-warn">
+              <i class="fa-solid fa-calendar-days"></i>{{ t.plazo|date:"d/m" }}
+            </span>
+            {% endif %}
+            <div class="task-actions">
+              <button class="tact-btn" onclick="moverTarea({{ t.pk }},'completada')">
+                <i class="fa-solid fa-check"></i> Completar
+              </button>
+              <button class="tact-btn" onclick="moverTarea({{ t.pk }},'no_empezada')">
+                <i class="fa-solid fa-rotate-left"></i>
+              </button>
+              <button class="tact-btn" onclick="abrirEditar({{ t.pk }}, '{{ t.titulo|escapejs }}', '{{ t.notas|default:''|escapejs }}', '{% if t.plazo %}{{ t.plazo|date:'Y-m-d' }}{% endif %}', '{{ t.estado }}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="pk" value="{{ t.pk }}">
+                <button type="submit" class="tact-btn del"
+                        onclick="return confirm('Eliminar esta tarea?')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+    <!-- COMPLETADAS -->
+    <div class="col-section">
+      <div class="col-title col-done">
+        <span><i class="fa-solid fa-circle-check" style="margin-right:0.35rem;"></i>Completadas</span>
+        <span class="col-cnt" id="lbl-done">—</span>
+      </div>
+      <div id="list-done">
+        {% for t in tareas %}{% if t.estado == 'completada' %}
+        <div class="task-row done done-row">
+          <div class="task-check done-check" title="Completada">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div class="task-content">
+            <div class="task-name">{{ t.titulo }}</div>
+            {% if t.notas %}<div class="task-notes">{{ t.notas|truncatechars:60 }}</div>{% endif %}
+          </div>
+          <div class="task-right">
+            {% if t.plazo %}
+            <span class="task-date date-ok">
+              <i class="fa-solid fa-calendar-days"></i>{{ t.plazo|date:"d/m" }}
+            </span>
+            {% endif %}
+            <div class="task-actions">
+              <button class="tact-btn" onclick="moverTarea({{ t.pk }},'en_proceso')">
+                <i class="fa-solid fa-rotate-left"></i> Reabrir
+              </button>
+              <button class="tact-btn" onclick="abrirEditar({{ t.pk }}, '{{ t.titulo|escapejs }}', '{{ t.notas|default:''|escapejs }}', '{% if t.plazo %}{{ t.plazo|date:'Y-m-d' }}{% endif %}', '{{ t.estado }}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="pk" value="{{ t.pk }}">
+                <button type="submit" class="tact-btn del"
+                        onclick="return confirm('Eliminar esta tarea?')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}{% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="hiddenForms"></div>
+
+<!-- Edit modal -->
+<div class="edit-overlay" id="editOverlay" onclick="if(event.target===this)cerrarEditar()">
+  <div class="edit-modal">
+    <h3><i class="fa-solid fa-pen" style="color:var(--blue2);margin-right:0.5rem;"></i>Editar tarea</h3>
+    <form method="post" action="/tareas/">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update">
+      <input type="hidden" name="pk" id="editPk">
+      <div class="mb-3">
+        <label class="kiwi-form-label">Descripcion *</label>
+        <input type="text" name="titulo" id="editTitulo" class="kiwi-input" required>
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Estado</label>
+        <select name="estado" id="editEstado" class="kiwi-input">
+          <option value="no_empezada">Pendiente</option>
+          <option value="en_proceso">En proceso</option>
+          <option value="completada">Completada</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Fecha limite</label>
+        <input type="date" name="plazo" id="editPlazo" class="kiwi-input">
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Notas (opcional)</label>
+        <textarea name="notas" id="editNotas" rows="3" class="kiwi-input"></textarea>
+      </div>
+      <div style="display:flex;gap:0.65rem;justify-content:flex-end;margin-top:1rem;">
+        <button type="button" class="btn-kiwi btn-kiwi-ghost" onclick="cerrarEditar()">Cancelar</button>
+        <button type="submit" class="btn-kiwi btn-kiwi-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}{% endwith %}
+{% block extra_js %}
+<script>
+function updateCounts(){
+  const pend = document.querySelectorAll('.task-row.pend').length;
+  const proc = document.querySelectorAll('.task-row.proc').length;
+  const done = document.querySelectorAll('.task-row.done').length;
+  const total = pend + proc + done;
+  document.getElementById('cnt-pend').textContent = pend;
+  document.getElementById('cnt-proc').textContent = proc;
+  document.getElementById('cnt-done').textContent = done;
+  document.getElementById('lbl-pend').textContent = pend;
+  document.getElementById('lbl-proc').textContent = proc;
+  document.getElementById('lbl-done').textContent = done;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const fill = document.getElementById('xp-fill');
+  const lbl  = document.getElementById('xp-label');
+  if (fill) fill.style.width = pct + '%';
+  if (lbl)  lbl.textContent = pct + '% — ' + done + ' de ' + total + ' completadas';
+}
+updateCounts();
+
+function moverTarea(pk, estado) {
+  const f = document.createElement('form');
+  f.method = 'post';
+  f.action = '/tareas/';
+  f.style.display = 'none';
+  f.innerHTML = `<input name="csrfmiddlewaretoken" value="${getCsrf()}">
+    <input name="action" value="update_estado">
+    <input name="pk" value="${pk}">
+    <input name="estado" value="${estado}">`;
+  document.getElementById('hiddenForms').appendChild(f);
+  f.submit();
+}
+
+function abrirEditar(pk, titulo, notas, plazo, estado) {
+  document.getElementById('editPk').value = pk;
+  document.getElementById('editTitulo').value = titulo;
+  document.getElementById('editNotas').value = notas;
+  document.getElementById('editPlazo').value = plazo;
+  document.getElementById('editEstado').value = estado;
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function cerrarEditar() {
+  document.getElementById('editOverlay').classList.remove('show');
+}
+</script>
+{% endblock %}

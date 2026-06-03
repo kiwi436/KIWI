@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ plan.titulo }} — Formato Institucional</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10pt;
+      color: #000;
+      background: #d0d0d0;
+    }
+
+    /* ── BARRA SUPERIOR (no se imprime) ── */
+    .no-print {
+      background: #1a1a2e;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .btn-export {
+      background: #C00000;
+      color: #fff;
+      border: none;
+      padding: 10px 30px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .btn-export:hover { background: #a00000; }
+    .btn-back {
+      background: transparent;
+      color: #bbb;
+      border: 1px solid #555;
+      padding: 10px 20px;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-back:hover { color: #fff; border-color: #999; }
+
+    /* ── PÁGINA ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 16px auto;
+      background: #fff;
+      padding: 13mm 14mm 20mm 14mm;
+      position: relative;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.25);
+    }
+
+    /* ── ENCABEZADO INSTITUCIONAL ── */
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+    }
+    .header-logo-cell {
+      width: 75px;
+      background: #1B5E20;
+      text-align: center;
+      vertical-align: middle;
+      padding: 8px 6px;
+      border-right: 1.5px solid #000;
+    }
+    .header-logo-cell img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+    }
+    .header-main-cell {
+      background: #1B5E20;
+      padding: 10px 16px;
+      vertical-align: middle;
+    }
+    .school-name {
+      font-size: 15pt;
+      font-weight: bold;
+      color: #E8A000;
+      letter-spacing: 0.8px;
+      line-height: 1.2;
+    }
+    .school-sub {
+      font-size: 8.5pt;
+      color: #fff;
+      margin-top: 3px;
+      opacity: 0.85;
+    }
+    .school-doc-type {
+      font-size: 8pt;
+      color: #fff;
+      margin-top: 2px;
+      font-style: italic;
+      opacity: 0.75;
+    }
+
+    /* ── TABLA DE IDENTIFICACIÓN ── */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .info-table td {
+      border: 1px solid #000;
+      padding: 4px 7px;
+      font-size: 8.5pt;
+      vertical-align: middle;
+    }
+    .lbl {
+      background: #FFFF00;
+      font-weight: bold;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+    }
+
+    /* ── FILA ROJA DE ASIGNATURA ── */
+    .subject-bar {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .subject-bar td {
+      background: #C00000;
+      color: #fff;
+      font-weight: bold;
+      font-size: 10pt;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      text-align: center;
+      letter-spacing: 1.2px;
+    }
+
+    /* ── BARRA NUMERADORA DE DESEMPEÑO ── */
+    .desemp-bar {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .desemp-bar td {
+      background: #1e3a8a;
+      color: #fff;
+      font-weight: bold;
+      font-size: 8.5pt;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      letter-spacing: 0.8px;
+    }
+
+    /* ── TABLA PRINCIPAL: DESEMPEÑO | ESTRATEGIA ── */
+    .plan-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .plan-table th {
+      background: #FFFF00;
+      font-weight: bold;
+      font-size: 9pt;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      border: 1px solid #000;
+      text-align: center;
+    }
+    .plan-table td {
+      border: 1px solid #000;
+      padding: 9px 10px;
+      font-size: 8.5pt;
+      vertical-align: top;
+      line-height: 1.65;
+    }
+    .col-desempeno { width: 38%; }
+    .col-estrategia { width: 62%; }
+
+    .desempeno-goal {
+      font-weight: bold;
+      font-size: 9pt;
+      line-height: 1.55;
+    }
+    .temas-lbl {
+      font-size: 7pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-top: 11px;
+      margin-bottom: 4px;
+      color: #444;
+      border-bottom: 1px solid #bbb;
+      padding-bottom: 2px;
+      letter-spacing: 0.4px;
+    }
+    .temas-ul {
+      padding-left: 14px;
+      font-size: 8pt;
+    }
+    .temas-ul li {
+      margin-bottom: 3px;
+      line-height: 1.45;
+    }
+    .estrategia-p {
+      margin-bottom: 8px;
+      font-size: 8.5pt;
+      line-height: 1.65;
+      text-align: justify;
+    }
+    .estrategia-p:last-child { margin-bottom: 0; }
+
+    /* ── VALORACIÓN CONTINUA ── */
+    .valoracion-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .valoracion-table th {
+      background: #00B0F0;
+      font-weight: bold;
+      font-size: 9pt;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      border: 1px solid #000;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    .valoracion-table td {
+      border: 1px solid #000;
+      padding: 9px 12px;
+      font-size: 8.5pt;
+      vertical-align: top;
+    }
+    .valoracion-ul {
+      padding-left: 16px;
+    }
+    .valoracion-ul li {
+      margin-bottom: 5px;
+      line-height: 1.55;
+    }
+
+    /* ── TABLA RÚBRICA ── */
+    .rubrica-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .rubrica-table th {
+      font-weight: bold;
+      font-size: 9pt;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      border: 1px solid #000;
+      text-align: center;
+    }
+    .th-rub-d { background: #FFFF00; width: 25%; }
+    .th-rub-s { background: #FFFF00; width: 25%; }
+    .th-rub-a { background: #00B0F0; width: 25%; }
+    .th-rub-b { background: #fff;    width: 25%; border-top: 1px solid #000; }
+    .rubrica-table td {
+      border: 1px solid #000;
+      padding: 9px 10px;
+      font-size: 8.5pt;
+      vertical-align: top;
+      line-height: 1.6;
+    }
+    .td-rub-d { font-weight: bold; }
+
+    /* ── PIE DE PÁGINA ── */
+    .page-footer {
+      position: absolute;
+      bottom: 9mm;
+      right: 14mm;
+      color: #C00000;
+      font-weight: bold;
+      font-size: 10pt;
+      letter-spacing: 0.5px;
+    }
+    .page-num {
+      position: absolute;
+      bottom: 9mm;
+      left: 14mm;
+      color: #666;
+      font-size: 8pt;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .page {
+        width: 100%;
+        min-height: auto;
+        margin: 0;
+        padding: 13mm 14mm 18mm 14mm;
+        box-shadow: none;
+      }
+      .page-break { page-break-before: always; }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+    }
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── BARRA SUPERIOR ── -->
+<div class="no-print">
+  <a href="/plan-aula/{{ plan.pk }}/" class="btn-back">← Volver al plan</a>
+  <button onclick="window.print()" class="btn-export">⬇ Exportar / Imprimir PDF</button>
+</div>
+
+<!-- ════════════════════ PÁGINA 1: IDENTIFICACIÓN + DESEMPEÑOS ════════════════════ -->
+<div class="page">
+
+  <!-- ENCABEZADO -->
+  <table class="header-table">
+    <tr>
+      <td class="header-logo-cell">
+        <img src="{% static 'kiwi/img/logo_cosfa.png' %}" alt="Logo">
+      </td>
+      <td class="header-main-cell">
+        <div class="school-name">COLEGIO SAN FRANCISCO DE ASÍS</div>
+        <div class="school-sub">Cali, Colombia &nbsp;·&nbsp; Gestión Socioemocional y Bienestar</div>
+        <div class="school-doc-type">Formato Institucional — Plan de Aula</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- TABLA DE IDENTIFICACIÓN -->
+  <table class="info-table">
+    <tr>
+      <td class="lbl" style="width:16%;">Campo de Formación</td>
+      <td style="width:28%;">Gestión Socioemocional y Bienestar</td>
+      <td class="lbl" style="width:12%;">Competencia</td>
+      <td style="width:22%;">{{ competencia_display }}</td>
+      <td class="lbl" style="width:8%;">Grado</td>
+      <td style="width:7%;">{{ grado_short }}</td>
+      <td class="lbl" style="width:7%;">Ciclo</td>
+    </tr>
+    <tr>
+      <td class="lbl">Nombre del Docente</td>
+      <td colspan="3">{{ usuario_nombre }}</td>
+      <td class="lbl">Período</td>
+      <td colspan="2">{{ plan.periodo }}</td>
+    </tr>
+  </table>
+
+  <!-- ASIGNATURA / TEMA -->
+  <table class="subject-bar">
+    <tr><td>{{ plan.titulo|upper }}</td></tr>
+  </table>
+
+  <!-- ═══ BUCLE DE DESEMPEÑOS ═══ -->
+  {% for d in desempenios %}
+
+    {% if desempenios|length > 1 %}
+    <!-- Numerador de desempeño -->
+    <table class="desemp-bar">
+      <tr><td>&#9679; DESEMPEÑO {{ forloop.counter }}</td></tr>
+    </table>
+    {% endif %}
+
+    <!-- DESEMPEÑO | ESTRATEGIA -->
+    <table class="plan-table">
+      <thead>
+        <tr>
+          <th class="col-desempeno">DESEMPEÑO &nbsp;¿QUÉ?</th>
+          <th class="col-estrategia">ESTRATEGIA DE APRENDIZAJE &nbsp;¿CÓMO?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="desempeno-goal">{{ d.desempenio }}</div>
+            {% if d.temas %}
+            <div class="temas-lbl">Temas para Trabajar</div>
+            <ul class="temas-ul">
+              {% for t in d.temas %}<li>{{ t }}</li>{% endfor %}
+            </ul>
+            {% endif %}
+          </td>
+          <td>
+            {% for p in d.estrategia %}
+            <p class="estrategia-p">{{ p }}</p>
+            {% empty %}
+            <p class="estrategia-p" style="color:#666;font-style:italic;">Estrategia no generada.</p>
+            {% endfor %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- VALORACIÓN CONTINUA -->
+    <table class="valoracion-table">
+      <thead>
+        <tr><th>VALORACIÓN CONTINUA</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            {% if d.valoracion %}
+            <ul class="valoracion-ul">
+              {% for item in d.valoracion %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+            {% else %}
+            <span style="color:#666;font-style:italic;">Sin criterios de valoración.</span>
+            {% endif %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- RÚBRICA -->
+    <table class="rubrica-table">
+      <thead>
+        <tr>
+          <th class="th-rub-d">DESEMPEÑO</th>
+          <th class="th-rub-s">SUPERIOR</th>
+          <th class="th-rub-a">ALTO</th>
+          <th class="th-rub-b">BÁSICO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-rub-d">{{ d.desempenio }}</td>
+          <td>{{ d.nivel_superior|default:"—" }}</td>
+          <td>{{ d.nivel_alto|default:"—" }}</td>
+          <td>{{ d.nivel_basico|default:"—" }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+  {% endfor %}
+
+  <div class="page-num">Generado con K.I.W.I. · Kleit IA &nbsp;|&nbsp; {{ plan.created_at|date:"d/m/Y" }}</div>
+  <div class="page-footer">#SomosFraternos</div>
+</div>
+
+<script>
+  if (new URLSearchParams(window.location.search).get('imprimir') === '1') {
+    window.addEventListener('load', function() { window.print(); });
+  }
+</script>
+</body>
+</html>

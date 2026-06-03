@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sobre Kleit — IA de KIWI</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--blue1:#35458f;--blue2:#6a80e2;--blue3:#122666;--white:#fff;--text:#111;--surface:#f6f8ff;--border:#e0e6f5;--teal:#0891b2;--teal-light:#e0f6fb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:#fff;color:var(--text);}
+
+/* NAV */
+nav{display:flex;align-items:center;padding:0 3rem;height:72px;border-bottom:1px solid var(--border);position:sticky;top:0;background:white;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:0.6rem;text-decoration:none;color:var(--blue3);}
+.nav-logo strong{font-family:'Space Grotesk';font-size:1.4rem;font-weight:700;letter-spacing:3px;}
+.nav-links{display:flex;gap:2.5rem;margin:0 3rem;}
+.nav-links a{text-decoration:none;color:var(--text);font-size:0.9rem;font-weight:600;transition:color 0.2s;}
+.nav-links a:hover{color:var(--blue2);}
+.nav-links a.active{color:var(--blue2);}
+.nav-btns{margin-left:auto;display:flex;gap:0.75rem;}
+.btn-login{padding:0.55rem 1.4rem;border-radius:25px;font-weight:700;font-size:0.875rem;cursor:pointer;text-decoration:none;transition:all 0.2s;font-family:'Nunito',sans-serif;}
+.btn-login.outline{border:2px solid var(--blue3);color:var(--blue3);background:transparent;}
+.btn-login.outline:hover{background:var(--blue3);color:white;}
+.btn-login.filled{background:var(--blue3);color:white;border:2px solid var(--blue3);}
+.btn-login.filled:hover{background:var(--blue1);}
+
+/* HERO */
+.page-hero{
+  background:linear-gradient(135deg,#0b1f4a 0%,var(--blue3) 50%,var(--teal) 100%);
+  padding:5rem 3rem 4rem;
+  text-align:center;
+  color:#fff;
+  position:relative;overflow:hidden;
+}
+.page-hero::before{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:300px;height:300px;border-radius:50%;
+  background:rgba(106,128,226,0.15);pointer-events:none;
+}
+.page-hero::after{
+  content:'';position:absolute;bottom:-80px;left:-40px;
+  width:240px;height:240px;border-radius:50%;
+  background:rgba(8,145,178,0.12);pointer-events:none;
+}
+.page-hero .badge{
+  display:inline-block;background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.3);border-radius:20px;
+  padding:0.35rem 1rem;font-size:0.8rem;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:1.5rem;
+}
+.page-hero .cat-wrapper{
+  width:100px;height:100px;border-radius:50%;
+  background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.2);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1.5rem;overflow:hidden;
+}
+.page-hero .cat-wrapper img{width:80px;height:80px;object-fit:contain;}
+.page-hero h1{font-size:3rem;font-weight:900;line-height:1.15;margin-bottom:1rem;}
+.page-hero h1 span{color:#a5d8ff;}
+.page-hero p{font-size:1.05rem;opacity:0.85;max-width:600px;margin:0 auto;line-height:1.7;}
+
+/* CONTENT */
+.content{max-width:1000px;margin:0 auto;padding:4rem 2rem 6rem;}
+
+/* QUÉ ES KLEIT */
+.intro-block{
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:2.5rem;margin-bottom:3.5rem;
+  display:flex;gap:2rem;align-items:flex-start;
+}
+.intro-block .intro-icon{
+  flex-shrink:0;width:64px;height:64px;border-radius:16px;
+  background:#dde6ff;color:#35458f;display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+}
+.intro-block h2{font-size:1.5rem;font-weight:800;color:var(--blue3);margin-bottom:0.6rem;}
+.intro-block p{color:#555;font-size:0.95rem;line-height:1.8;}
+@media(max-width:600px){.intro-block{flex-direction:column;}}
+
+/* CÓMO FUNCIONA */
+.section-title{text-align:center;margin-bottom:2.5rem;}
+.section-title h2{font-size:1.9rem;font-weight:800;color:var(--blue3);margin-bottom:0.5rem;}
+.section-title p{color:#666;font-size:0.95rem;max-width:520px;margin:0 auto;}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:1.5rem;margin-bottom:4rem;}
+.step{
+  display:flex;gap:1.5rem;align-items:flex-start;
+  background:#fff;border:1px solid var(--border);border-radius:16px;padding:1.75rem;
+  transition:box-shadow 0.2s;
+}
+.step:hover{box-shadow:0 6px 24px rgba(53,69,143,0.1);}
+.step-num{
+  flex-shrink:0;width:44px;height:44px;border-radius:50%;
+  background:var(--blue3);color:#fff;font-weight:900;font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.step-body h3{font-size:1rem;font-weight:800;color:var(--blue3);margin-bottom:0.4rem;}
+.step-body p{font-size:0.9rem;color:#555;line-height:1.7;}
+
+/* PRINCIPIOS */
+.principios-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:4rem;
+}
+@media(max-width:700px){.principios-grid{grid-template-columns:1fr;}}
+
+.principio-card{
+  border-radius:16px;padding:2rem;text-align:center;
+  background:var(--surface);border:1px solid var(--border);
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.principio-card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(53,69,143,0.12);}
+.principio-card .p-icon{
+  width:52px;height:52px;border-radius:14px;margin:0 auto 1rem;
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.principio-card h3{font-size:1rem;font-weight:800;color:var(--blue3);margin-bottom:0.5rem;}
+.principio-card p{font-size:0.875rem;color:#555;line-height:1.65;}
+
+/* CTA */
+.highlight-block{
+  background:linear-gradient(135deg,#0b1f4a,var(--blue3));
+  border-radius:20px;padding:3rem;color:#fff;text-align:center;
+}
+.highlight-block h2{font-size:1.8rem;font-weight:800;margin-bottom:0.75rem;}
+.highlight-block p{opacity:0.85;font-size:0.95rem;max-width:480px;margin:0 auto 2rem;}
+.highlight-block a{
+  display:inline-block;background:#fff;color:var(--blue3);
+  padding:0.75rem 2rem;border-radius:25px;font-weight:800;font-size:0.9rem;text-decoration:none;transition:opacity 0.2s;
+}
+.highlight-block a:hover{opacity:0.9;}
+
+/* DIVIDER */
+.section-divider{
+  display:flex;align-items:center;gap:1rem;margin:3rem 0;color:#bbb;font-size:0.85rem;
+}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="{% static 'kiwi/img/Logokiwi.png' %}" alt="KIWI Logo" style="width:48px;height:48px;object-fit:contain;">
+    <strong>KIWI</strong>
+  </a>
+  <div class="nav-links">
+    <a href="/">Inicio</a>
+    <a href="/sobre-kiwi/">Sobre KIWI</a>
+    <a href="/sobre-kleit/" class="active">Sobre nuestra IA &ldquo;Kleit&rdquo;</a>
+  </div>
+  <div class="nav-btns">
+    <a href="/login/" class="btn-login outline">Iniciar Sesión</a>
+    <a href="/registro/" class="btn-login filled">Registrarse</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="badge">Inteligencia Artificial Pedagógica</div>
+  <h1>¿Qué es <span>Kleit</span>?</h1>
+  <p>Kleit es un asistente virtual inteligente desarrollado especialmente para apoyar la planificación, organización y creación de contenido pedagógico dentro de K.I.W.I.</p>
+</div>
+
+<div class="content">
+
+  <!-- QUÉ ES -->
+  <div class="intro-block">
+    <div class="intro-icon"><i class="fa-solid fa-microchip"></i></div>
+    <div>
+      <h2>Inteligencia al servicio del docente</h2>
+      <p>Kleit utiliza técnicas de inteligencia artificial para analizar información, generar ideas y facilitar la labor docente de manera rápida y confiable. No reemplaza al docente — lo acompaña, para que pueda dedicar más energía a lo que realmente importa: sus estudiantes.</p>
+    </div>
+  </div>
+
+  <div class="section-divider">Cómo funciona</div>
+
+  <!-- CÓMO FUNCIONA -->
+  <div class="section-title">
+    <h2>¿Cómo funciona Kleit?</h2>
+    <p>Kleit procesa la información que el docente ingresa y genera sugerencias personalizadas paso a paso.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>El docente ingresa el contexto</h3>
+        <p>Temas, curso, tipo de actividad y enfoque emocional. Kleit analiza esta información para entender exactamente qué necesitas.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Procesamiento con modelos de lenguaje</h3>
+        <p>Kleit utiliza modelos de lenguaje entrenados para apoyar la creación de clases, generando sugerencias coherentes y alineadas con los objetivos pedagógicos.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Resultado listo para usar</h3>
+        <p>Kleit entrega ideas didácticas, estrategias, planes de aula y materiales listos para revisar y aplicar. El docente siempre tiene la última palabra.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">Principios</div>
+
+  <!-- PRINCIPIOS -->
+  <div class="section-title">
+    <h2>Tres principios que guían a Kleit</h2>
+    <p>Diseñados para que la IA sea un apoyo real, no una carga adicional.</p>
+  </div>
+
+  <div class="principios-grid">
+    <div class="principio-card">
+      <div class="p-icon" style="background:#dde6ff;color:#35458f;"><i class="fa-solid fa-brain"></i></div>
+      <h3>Comprensión del contexto</h3>
+      <p>Analiza el tema y el nivel del grupo para generar contenido pertinente y apropiado para cada situación.</p>
+    </div>
+    <div class="principio-card">
+      <div class="p-icon" style="background:#d6f5e3;color:#15803d;"><i class="fa-solid fa-graduation-cap"></i></div>
+      <h3>Generación pedagógica</h3>
+      <p>Propone ideas didácticas, dinámicas y materiales adecuados al enfoque socioemocional de la institución.</p>
+    </div>
+    <div class="principio-card">
+      <div class="p-icon" style="background:#fff0d6;color:#b45309;"><i class="fa-solid fa-bolt"></i></div>
+      <h3>Optimización del tiempo</h3>
+      <p>Reduce la carga de trabajo docente al evitar búsquedas manuales extensas y agilizar la planificación.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

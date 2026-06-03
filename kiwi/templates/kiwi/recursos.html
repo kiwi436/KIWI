@@ -1,0 +1,332 @@
+{% extends 'kiwi/base.html' %}
+{% block title %}| Banco de Recursos{% endblock %}
+{% block topbar_icon %}folder-open{% endblock %}
+{% block topbar_title %}Banco de Recursos{% endblock %}
+{% block extra_css %}
+<style>
+/* Ciclo tabs */
+.ciclo-tabs {
+  display: flex; gap: 0; flex-wrap: nowrap;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 14px; padding: 0.3rem; margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+.ciclo-tab {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; border-radius: 10px;
+  font-size: 0.78rem; font-weight: 800;
+  color: var(--text-muted); text-decoration: none;
+  transition: all 0.18s; white-space: nowrap; border: 1.5px solid transparent;
+  cursor: pointer;
+}
+.ciclo-tab:hover { background: var(--blue-bg); color: var(--blue1); text-decoration: none; }
+.ciclo-tab.active {
+  background: linear-gradient(135deg, rgba(106,128,226,0.15), rgba(53,69,143,0.08));
+  color: var(--blue1); border-color: rgba(106,128,226,0.3);
+}
+[data-theme="dark"] .ciclo-tab.active { color: var(--blue2); }
+.ciclo-tab i { font-size: 0.8rem; }
+
+/* Type sub-tabs */
+.tipo-tabs {
+  display: flex; gap: 0.35rem; flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.tipo-tab {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.35rem 0.8rem; border-radius: 20px;
+  font-size: 0.73rem; font-weight: 800;
+  color: var(--text-muted); text-decoration: none;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  transition: all 0.18s;
+}
+.tipo-tab:hover { border-color: var(--blue2); color: var(--blue2); text-decoration: none; }
+.tipo-tab.active { background: var(--blue2); color: white; border-color: var(--blue2); }
+
+/* Resource grid */
+.rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+
+/* Resource card */
+.rec-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 18px; overflow: hidden;
+  box-shadow: var(--shadow); transition: all 0.2s;
+  display: flex; flex-direction: column;
+}
+.rec-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(18,38,102,0.16);
+  border-color: var(--blue2);
+}
+.rec-card-top {
+  height: 78px; display: flex; align-items: center; justify-content: center;
+  position: relative; font-size: 1.8rem;
+}
+.rec-top-documento { background: linear-gradient(135deg, #fef9c3, #fde047); }
+.rec-top-video { background: linear-gradient(135deg, #fce7f3, #f9a8d4); }
+.rec-top-enlace { background: linear-gradient(135deg, #d1fae5, #6ee7b7); }
+.rec-top-planilla { background: linear-gradient(135deg, #dbeafe, #93c5fd); }
+.rec-top-actividad { background: linear-gradient(135deg, #ede9fe, #c4b5fd); }
+.rec-top-otro { background: linear-gradient(135deg, #fee2e2, #fca5a5); }
+[data-theme="dark"] .rec-top-documento { background: linear-gradient(135deg, #451a03, #92400e); }
+[data-theme="dark"] .rec-top-video { background: linear-gradient(135deg, #4a1942, #7c3aed); }
+[data-theme="dark"] .rec-top-enlace { background: linear-gradient(135deg, #064e3b, #065f46); }
+[data-theme="dark"] .rec-top-planilla { background: linear-gradient(135deg, #1e3a5f, #1e40af); }
+[data-theme="dark"] .rec-top-actividad { background: linear-gradient(135deg, #2e1065, #4c1d95); }
+[data-theme="dark"] .rec-top-otro { background: linear-gradient(135deg, #450a0a, #991b1b); }
+.rec-tipo-pill {
+  position: absolute; top: 0.4rem; right: 0.4rem;
+  font-size: 0.58rem; font-weight: 800; padding: 0.12rem 0.45rem;
+  border-radius: 20px; background: rgba(255,255,255,0.92);
+  color: #374151; backdrop-filter: blur(4px); letter-spacing: 0.04em; text-transform: uppercase;
+}
+.rec-ciclo-badge {
+  position: absolute; top: 0.4rem; left: 0.4rem;
+  font-size: 0.56rem; font-weight: 800; padding: 0.1rem 0.4rem;
+  border-radius: 20px; background: rgba(18,38,102,0.82);
+  color: white; letter-spacing: 0.04em;
+}
+.rec-body { padding: 0.85rem; flex: 1; }
+.rec-title { font-size: 0.875rem; font-weight: 900; color: var(--text); margin-bottom: 0.3rem; line-height: 1.3; }
+.rec-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 0.5rem; }
+.rec-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+.rec-tag {
+  background: var(--blue-bg); color: var(--blue1);
+  padding: 0.1rem 0.4rem; border-radius: 20px;
+  font-size: 0.62rem; font-weight: 800;
+}
+[data-theme="dark"] .rec-tag { color: var(--blue2); }
+.rec-footer {
+  padding: 0.5rem 0.85rem; border-top: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--blue-bg);
+}
+.rec-date { font-size: 0.63rem; color: var(--text-muted); font-weight: 700; }
+.rec-actions { display: flex; gap: 0.3rem; }
+.rec-act-btn {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 7px; padding: 0.18rem 0.4rem; font-size: 0.68rem;
+  font-family: var(--font); cursor: pointer; color: var(--text-muted);
+  font-weight: 700; transition: all 0.15s; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 0.2rem;
+}
+.rec-act-btn:hover { border-color: var(--blue2); color: var(--blue2); text-decoration: none; }
+.rec-act-btn.del { color: var(--danger); }
+.rec-act-btn.del:hover { border-color: var(--danger); background: rgba(239,83,80,0.06); }
+
+
+</style>
+{% endblock %}
+{% with active='recursos' %}
+{% block content %}
+
+<!-- HERO -->
+<div class="kiwi-hero" style="margin-bottom:1.5rem;">
+  <div style="position:relative;z-index:1;">
+    <h1 style="font-size:1.45rem;"><i class="fa-solid fa-folder-open" style="font-size:1.1rem;margin-right:0.5rem;"></i>Banco de Recursos</h1>
+    <p>Materiales didacticos organizados por ciclo educativo</p>
+  </div>
+  <div style="position:relative;z-index:1;margin-left:auto;">
+    <button class="btn-kiwi btn-kiwi-blue" onclick="openAddModal()">
+      <i class="fa-solid fa-plus"></i> Agregar recurso
+    </button>
+  </div>
+  <i class="fa-solid fa-book-open" style="position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);font-size:5rem;opacity:0.1;"></i>
+</div>
+
+<!-- MODAL: Agregar recurso -->
+<div class="kiwi-modal-overlay" id="addRecursoOverlay" onclick="if(event.target===this)closeAddModal()">
+  <div class="kiwi-modal" style="max-width:540px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
+      <h3 style="margin:0;font-size:1.05rem;">
+        <i class="fa-solid fa-folder-plus" style="color:var(--blue2);margin-right:0.4rem;font-size:0.9rem;"></i>
+        Agregar recurso
+      </h3>
+      <button onclick="closeAddModal()"
+              style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);line-height:1;padding:0.2rem;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="kiwi-form-label">Título del recurso *</label>
+        <input type="text" class="kiwi-input" name="titulo" placeholder="Nombre del material didáctico" required>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
+        <div>
+          <label class="kiwi-form-label">Ciclo educativo *</label>
+          <select class="kiwi-input" name="ciclo" required>
+            <option value="">Selecciona...</option>
+            {% for val, label in ciclos %}
+            <option value="{{ val }}" {% if ciclo_filtro == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <div style="margin-top:0.35rem;font-size:0.68rem;color:var(--text-muted);line-height:1.4;">
+            <i class="fa-solid fa-circle-info" style="color:var(--blue2);"></i>
+            Jardín/Trans. = Inicial · 1-2 = C.1 · 3-5 = C.2 · 6-8 = C.3 · 9-11 = C.4
+          </div>
+        </div>
+        <div>
+          <label class="kiwi-form-label">Tipo de recurso</label>
+          <select class="kiwi-input" name="tipo">
+            {% for val, label in tipos %}
+            <option value="{{ val }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Descripción</label>
+        <textarea class="kiwi-input" name="descripcion" rows="2"
+                  placeholder="Describe brevemente este recurso y cómo usarlo en clase..."></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;" class="mb-3">
+        <div>
+          <label class="kiwi-form-label">Etiquetas <span style="font-weight:500;font-size:0.7rem;">(separadas por espacio)</span></label>
+          <input type="text" class="kiwi-input" name="etiquetas" placeholder="emociones autoestima sel">
+        </div>
+        <div>
+          <label class="kiwi-form-label">Enlace URL</label>
+          <input type="url" class="kiwi-input" name="enlace" placeholder="https://...">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="kiwi-form-label">Archivo <span style="font-weight:500;font-size:0.7rem;">(opcional)</span></label>
+        <input type="file" class="kiwi-input" name="archivo" style="font-size:0.8rem;padding:0.4rem 0.65rem;">
+      </div>
+      <div style="display:flex;gap:0.65rem;justify-content:flex-end;padding-top:0.75rem;border-top:1.5px solid var(--border);">
+        <button type="button" onclick="closeAddModal()" class="btn-kiwi btn-kiwi-ghost">Cancelar</button>
+        <button type="submit" class="btn-kiwi btn-kiwi-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar recurso
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CICLO FILTER TABS -->
+<div class="ciclo-tabs">
+  <a href="/recursos/" class="ciclo-tab {% if not ciclo_filtro %}active{% endif %}">
+    <i class="fa-solid fa-layer-group"></i> Todos los ciclos
+  </a>
+  <a href="/recursos/?ciclo=ciclo_inicial{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="ciclo-tab {% if ciclo_filtro == 'ciclo_inicial' %}active{% endif %}">
+    <i class="fa-solid fa-seedling"></i> Ciclo Inicial
+    <span style="font-size:0.6rem;opacity:0.7;">(Jardin &amp; Trans.)</span>
+  </a>
+  <a href="/recursos/?ciclo=ciclo_uno{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="ciclo-tab {% if ciclo_filtro == 'ciclo_uno' %}active{% endif %}">
+    <i class="fa-solid fa-child"></i> Ciclo 1
+    <span style="font-size:0.6rem;opacity:0.7;">(1° y 2°)</span>
+  </a>
+  <a href="/recursos/?ciclo=ciclo_dos{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="ciclo-tab {% if ciclo_filtro == 'ciclo_dos' %}active{% endif %}">
+    <i class="fa-solid fa-person"></i> Ciclo 2
+    <span style="font-size:0.6rem;opacity:0.7;">(3° a 5°)</span>
+  </a>
+  <a href="/recursos/?ciclo=ciclo_tres{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="ciclo-tab {% if ciclo_filtro == 'ciclo_tres' %}active{% endif %}">
+    <i class="fa-solid fa-user-graduate"></i> Ciclo 3
+    <span style="font-size:0.6rem;opacity:0.7;">(6° a 8°)</span>
+  </a>
+  <a href="/recursos/?ciclo=ciclo_cuatro{% if tipo_filtro %}&tipo={{ tipo_filtro }}{% endif %}" class="ciclo-tab {% if ciclo_filtro == 'ciclo_cuatro' %}active{% endif %}">
+    <i class="fa-solid fa-graduation-cap"></i> Ciclo 4
+    <span style="font-size:0.6rem;opacity:0.7;">(9° a 11°)</span>
+  </a>
+</div>
+
+<!-- TIPO SUB-FILTER -->
+{% if ciclo_filtro %}
+<div class="tipo-tabs">
+  <a href="/recursos/?ciclo={{ ciclo_filtro }}" class="tipo-tab {% if not tipo_filtro %}active{% endif %}">
+    <i class="fa-solid fa-border-all"></i> Todos los tipos
+  </a>
+  {% for val, label in tipos %}
+  <a href="/recursos/?ciclo={{ ciclo_filtro }}&tipo={{ val }}" class="tipo-tab {% if tipo_filtro == val %}active{% endif %}">
+    <i class="fa-solid fa-{% if val == 'documento' %}file-alt{% elif val == 'video' %}film{% elif val == 'enlace' %}link{% elif val == 'planilla' %}table{% elif val == 'actividad' %}puzzle-piece{% else %}box{% endif %}"></i>
+    {{ label }}
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- HEADER INFO BAR -->
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+  <div style="font-size:0.8rem;color:var(--text-muted);font-weight:700;">
+    <i class="fa-solid fa-filter" style="color:var(--blue2);"></i>
+    {% if ciclo_filtro %}
+      {% for val, label in ciclos %}{% if val == ciclo_filtro %}{{ label }}{% endif %}{% endfor %}
+      {% if tipo_filtro %} &rarr; {% for val, label in tipos %}{% if val == tipo_filtro %}{{ label }}{% endif %}{% endfor %}{% endif %}
+    {% else %}
+      Todos los recursos
+    {% endif %}
+    &nbsp;&middot;&nbsp;
+    <strong style="color:var(--text);">{{ recursos|length }} resultado{{ recursos|length|pluralize:"s" }}</strong>
+  </div>
+</div>
+
+<!-- RESOURCE GRID -->
+<div class="rec-grid">
+  {% for r in recursos %}
+  <div class="rec-card">
+    <div class="rec-card-top rec-top-{{ r.tipo }}">
+      <i class="fa-solid fa-{% if r.tipo == 'documento' %}file-alt{% elif r.tipo == 'video' %}film{% elif r.tipo == 'enlace' %}link{% elif r.tipo == 'planilla' %}table{% elif r.tipo == 'actividad' %}puzzle-piece{% else %}box{% endif %}"></i>
+      <span class="rec-tipo-pill">{{ r.get_tipo_display }}</span>
+      <span class="rec-ciclo-badge">
+        {% if r.ciclo == 'ciclo_inicial' %}C.Inicial
+        {% elif r.ciclo == 'ciclo_uno' %}Ciclo 1
+        {% elif r.ciclo == 'ciclo_dos' %}Ciclo 2
+        {% elif r.ciclo == 'ciclo_tres' %}Ciclo 3
+        {% elif r.ciclo == 'ciclo_cuatro' %}Ciclo 4
+        {% else %}General{% endif %}
+      </span>
+    </div>
+    <div class="rec-body">
+      <div class="rec-title">{{ r.titulo }}</div>
+      {% if r.descripcion %}
+      <div class="rec-desc">{{ r.descripcion|truncatechars:75 }}</div>
+      {% endif %}
+      {% if r.etiquetas %}
+      <div class="rec-tags">
+        {% for tag in r.etiquetas.split %}
+        <span class="rec-tag">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="rec-footer">
+      <span class="rec-date">{{ r.creado_en|date:"d/m/Y"|default:"—" }}</span>
+      <div class="rec-actions">
+        {% if r.enlace %}
+        <a href="{{ r.enlace }}" target="_blank" class="rec-act-btn">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver
+        </a>
+        {% endif %}
+        {% if r.archivo %}
+        <a href="{{ r.archivo.url }}" target="_blank" class="rec-act-btn">
+          <i class="fa-solid fa-download"></i>
+        </a>
+        {% endif %}
+        <a href="/recursos/eliminar/{{ r.pk }}/" class="rec-act-btn del" onclick="return confirm('Eliminar este recurso?')">
+          <i class="fa-solid fa-trash"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div style="grid-column:1/-1;text-align:center;padding:3rem 1.5rem;background:var(--blue-bg);border:2px dashed var(--border);border-radius:18px;">
+    <i class="fa-solid fa-folder-open" style="font-size:3rem;color:var(--blue2);opacity:0.4;display:block;margin-bottom:0.75rem;"></i>
+    <h4 style="font-weight:900;font-size:1rem;margin-bottom:0.35rem;">Sin recursos en este ciclo</h4>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">Agrega materiales didacticos para este nivel educativo</p>
+    <button class="btn-kiwi btn-kiwi-primary" onclick="openAddModal()">
+      <i class="fa-solid fa-plus"></i> Agregar primer recurso
+    </button>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}{% endwith %}
+{% block extra_js %}
+<script>
+function openAddModal()  { document.getElementById('addRecursoOverlay').classList.add('show'); }
+function closeAddModal() { document.getElementById('addRecursoOverlay').classList.remove('show'); }
+</script>
+{% endblock %}

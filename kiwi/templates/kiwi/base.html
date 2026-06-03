@@ -1,0 +1,1141 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KIWI {% block title %}{% endblock %} — Bienestar Socioemocional Docente</title>
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue1: #35458f;
+  --blue2: #6a80e2;
+  --blue3: #122666;
+  --blue-bg: #eef0fb;
+  --surface: #ffffff;
+  --border: #dde1f5;
+  --text: #1a1f3a;
+  --text-muted: #6b7280;
+  --success: #22c55e;
+  --danger: #ef5350;
+  --warning: #f59e0b;
+  --sidebar-w: 240px;
+  --topbar-h: 64px;
+  --radius: 12px;
+  --radius-lg: 18px;
+  --shadow: 0 2px 12px rgba(18,38,102,0.07);
+  --shadow-lg: 0 8px 32px rgba(18,38,102,0.14);
+  --font: 'Nunito', 'Inter', sans-serif;
+  --transition: 0.18s ease;
+}
+[data-theme="dark"] {
+  --blue-bg: #0e1225;
+  --surface: #161c35;
+  --border: #252d4a;
+  --text: #e4e8ff;
+  --text-muted: #7a85b0;
+  --shadow: 0 2px 12px rgba(0,0,0,0.35);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.45);
+}
+/* ── DARK MODE BOOTSTRAP OVERRIDES ── */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+[data-theme="dark"] .form-control::placeholder { color: var(--text-muted); }
+[data-theme="dark"] .card { background: var(--surface) !important; border-color: var(--border) !important; }
+[data-theme="dark"] .card-body,
+[data-theme="dark"] .card-header { background: var(--surface) !important; color: var(--text) !important; }
+[data-theme="dark"] .modal-content { background: var(--surface); border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .modal-header { border-bottom-color: var(--border); }
+[data-theme="dark"] .modal-footer { border-top-color: var(--border); }
+[data-theme="dark"] .table { color: var(--text); }
+[data-theme="dark"] .table > :not(caption) > * > * { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] .dropdown-menu { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] .dropdown-item { color: var(--text); }
+[data-theme="dark"] .dropdown-item:hover { background: var(--blue-bg); }
+[data-theme="dark"] .list-group-item { background: var(--surface); border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .input-group-text { background: var(--blue-bg); border-color: var(--border); color: var(--text-muted); }
+[data-theme="dark"] .btn-outline-secondary { color: var(--text-muted); border-color: var(--border); }
+[data-theme="dark"] .stat-card { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] .kiwi-card { background: var(--surface); border-color: var(--border); }
+[data-theme="dark"] .badge.bg-light { background: var(--blue-bg) !important; color: var(--text) !important; }
+[data-theme="dark"] select option { background: var(--surface); color: var(--text); }
+* { box-sizing: border-box; }
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--blue-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* ── LAYOUT ── */
+.kiwi-app { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.kiwi-sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  z-index: 300;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1.5px solid var(--border);
+  text-decoration: none;
+}
+.brand-logo {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--blue3), var(--blue2));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(106,128,226,0.4);
+}
+.brand-logo i { color: white; font-size: 1.15rem; }
+.brand-text { line-height: 1.1; }
+.brand-name { font-size: 1.2rem; font-weight: 900; letter-spacing: 2px; color: var(--blue1); }
+[data-theme="dark"] .brand-name { color: var(--blue2); }
+.brand-name span { color: var(--blue2); }
+.brand-sub { font-size: 0.6rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.sidebar-nav { flex: 1; padding: 0.75rem 0.5rem; overflow-y: auto; }
+.nav-section-label {
+  padding: 0.7rem 0.75rem 0.25rem;
+  font-size: 0.58rem; font-weight: 800; letter-spacing: 0.14em;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.kiwi-nav-item {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.825rem; font-weight: 700;
+  transition: all var(--transition);
+  border: 1.5px solid transparent;
+  margin-bottom: 0.1rem;
+  position: relative;
+}
+.kiwi-nav-item:hover {
+  background: var(--blue-bg);
+  color: var(--blue1);
+  text-decoration: none;
+}
+.kiwi-nav-item.active {
+  background: linear-gradient(135deg, rgba(106,128,226,0.14), rgba(53,69,143,0.07));
+  color: var(--blue1);
+  border-color: rgba(106,128,226,0.28);
+}
+[data-theme="dark"] .kiwi-nav-item.active { color: var(--blue2); }
+[data-theme="dark"] .kiwi-nav-item:hover { color: var(--blue2); background: rgba(106,128,226,0.08); }
+.kiwi-nav-item .nav-icon { width: 20px; text-align: center; font-size: 0.9rem; }
+.nav-active-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--blue2); margin-left: auto; flex-shrink: 0;
+}
+.kiwi-nav-item.danger { color: var(--danger); }
+.kiwi-nav-item.danger:hover { background: rgba(239,83,80,0.07); color: var(--danger); }
+
+.sidebar-footer {
+  padding: 0.75rem 0.5rem;
+  border-top: 1.5px solid var(--border);
+}
+
+/* User panel in sidebar */
+.sidebar-user {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--transition);
+  margin-bottom: 0.5rem;
+}
+.sidebar-user:hover { background: var(--blue-bg); }
+.sidebar-avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--blue3), var(--blue2));
+  border-radius: 10px;
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 800; flex-shrink: 0;
+  overflow: hidden;
+}
+.sidebar-user-info { flex: 1; min-width: 0; }
+.sidebar-user-name { font-size: 0.8rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+.sidebar-user-role { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; }
+
+/* ── TOPBAR ── */
+.kiwi-topbar {
+  position: fixed;
+  top: 0; left: var(--sidebar-w); right: 0;
+  height: var(--topbar-h);
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 1.75rem; gap: 1rem;
+  z-index: 200;
+  transition: background var(--transition), border-color var(--transition);
+}
+.topbar-title {
+  font-size: 0.95rem; font-weight: 800; color: var(--text);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.topbar-right {
+  display: flex; align-items: center; gap: 0.6rem; margin-left: auto;
+}
+.topbar-badge {
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: 50px; padding: 0.3rem 0.8rem;
+  font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+  display: flex; align-items: center; gap: 0.35rem;
+}
+.topbar-badge i { color: var(--blue2); }
+
+/* Dark toggle */
+.dark-toggle-wrap { display: flex; align-items: center; gap: 0.4rem; }
+.dark-toggle {
+  width: 40px; height: 21px; border-radius: 11px;
+  background: var(--border); border: none; cursor: pointer;
+  position: relative; outline: none; transition: background var(--transition);
+}
+.dark-toggle.on { background: var(--blue2); }
+.dark-toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 17px; height: 17px; border-radius: 50%; background: white;
+  transition: transform var(--transition); box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.dark-toggle.on::after { transform: translateX(19px); }
+.dark-toggle-icon { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Notification btn */
+.notif-btn {
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: 10px; width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; position: relative; transition: all var(--transition);
+  color: var(--text-muted); font-size: 0.95rem;
+}
+.notif-btn:hover { border-color: var(--blue2); color: var(--blue2); }
+.notif-count {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--danger); color: white;
+  font-size: 0.55rem; font-weight: 800;
+  width: 14px; height: 14px; border-radius: 50%;
+  display: none; align-items: center; justify-content: center;
+}
+
+/* User chip topbar */
+.user-chip-top {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 0.3rem 0.7rem 0.3rem 0.35rem;
+  cursor: pointer; position: relative;
+  transition: border-color var(--transition);
+}
+.user-chip-top:hover { border-color: var(--blue2); }
+.user-chip-avatar {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--blue3), var(--blue2));
+  color: white; display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 800; overflow: hidden;
+}
+.user-chip-name { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.user-chip-caret { font-size: 0.6rem; color: var(--text-muted); }
+.user-dropdown-menu {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg, 14px); box-shadow: var(--shadow-lg);
+  padding: 0.4rem; min-width: 180px;
+  display: none; z-index: 500;
+}
+.user-chip-top.open .user-dropdown-menu { display: block; }
+.dd-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.65rem; border-radius: 8px;
+  font-size: 0.8rem; font-weight: 700; color: var(--text);
+  text-decoration: none; cursor: pointer;
+  border: none; background: none; width: 100%; text-align: left;
+  font-family: var(--font); transition: background var(--transition);
+}
+.dd-item:hover { background: var(--blue-bg); color: var(--blue1); }
+.dd-item.red { color: var(--danger); }
+.dd-item.red:hover { background: rgba(239,83,80,0.08); }
+.dd-sep { height: 1px; background: var(--border); margin: 0.3rem 0; }
+
+/* ── MAIN CONTENT ── */
+.kiwi-main {
+  flex: 1;
+  min-width: 0;
+  margin-left: var(--sidebar-w);
+  padding-top: var(--topbar-h);
+  min-height: 100vh;
+  width: calc(100% - var(--sidebar-w));
+}
+.kiwi-page { padding: 2rem 2.25rem; }
+
+/* ── CARDS ── */
+.kiwi-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+  overflow: hidden;
+}
+.kiwi-card:hover { box-shadow: var(--shadow-lg); }
+.kiwi-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.kiwi-card-title {
+  font-size: 0.85rem; font-weight: 800; color: var(--blue1);
+  display: flex; align-items: center; gap: 0.5rem;
+  margin: 0;
+}
+[data-theme="dark"] .kiwi-card-title { color: var(--blue2); }
+.kiwi-card-body { padding: 1.25rem; }
+
+/* ── STAT CARDS ── */
+.stat-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem 1.5rem;
+  box-shadow: var(--shadow);
+  border-top: 4px solid var(--blue2);
+  transition: all var(--transition);
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.stat-num { font-size: 2.4rem; font-weight: 900; color: var(--blue1); line-height: 1; }
+[data-theme="dark"] .stat-num { color: var(--blue2); }
+.stat-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+.stat-icon { font-size: 1.5rem; color: var(--blue2); opacity: 0.6; }
+
+/* ── BUTTONS ── */
+.btn-kiwi {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9px;
+  font-family: var(--font);
+  font-size: 0.8rem; font-weight: 800;
+  cursor: pointer; border: none; text-decoration: none;
+  transition: all var(--transition);
+}
+.btn-kiwi:hover { text-decoration: none; }
+.btn-kiwi-primary { background: var(--blue3); color: white; }
+.btn-kiwi-primary:hover { background: var(--blue1); color: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(18,38,102,0.3); }
+.btn-kiwi-blue { background: var(--blue2); color: white; }
+.btn-kiwi-blue:hover { filter: brightness(1.1); color: white; transform: translateY(-1px); }
+.btn-kiwi-outline { background: transparent; border: 1.5px solid var(--blue2); color: var(--blue2); }
+.btn-kiwi-outline:hover { background: var(--blue2); color: white; }
+.btn-kiwi-ghost { background: var(--blue-bg); color: var(--text); border: 1.5px solid var(--border); }
+.btn-kiwi-ghost:hover { border-color: var(--blue2); color: var(--blue2); }
+.btn-kiwi-danger { background: var(--danger); color: white; }
+.btn-kiwi-danger:hover { filter: brightness(1.1); color: white; }
+.btn-kiwi-success { background: var(--success); color: white; }
+.btn-kiwi-sm { padding: 0.3rem 0.7rem; font-size: 0.74rem; border-radius: 7px; }
+.btn-kiwi-xs { padding: 0.2rem 0.5rem; font-size: 0.68rem; border-radius: 6px; }
+
+/* ── FORMS ── */
+.kiwi-form-label {
+  display: block;
+  font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+}
+.kiwi-input {
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  background: var(--blue-bg); border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-family: var(--font); font-size: 0.85rem; color: var(--text);
+  outline: none; transition: border-color var(--transition), box-shadow var(--transition);
+}
+.kiwi-input:focus {
+  border-color: var(--blue2);
+  box-shadow: 0 0 0 3px rgba(106,128,226,0.15);
+  background: var(--surface);
+}
+textarea.kiwi-input { resize: vertical; }
+
+/* Bootstrap overrides */
+.form-control, .form-select {
+  font-family: var(--font);
+  background: var(--blue-bg) !important;
+  border: 1.5px solid var(--border) !important;
+  color: var(--text) !important;
+  border-radius: 9px !important;
+  font-size: 0.85rem !important;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--blue2) !important;
+  box-shadow: 0 0 0 3px rgba(106,128,226,0.15) !important;
+  background: var(--surface) !important;
+}
+.form-label {
+  font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* ── BADGES ── */
+.kiwi-badge {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 20px; font-size: 0.66rem; font-weight: 800;
+}
+.badge-blue { background: rgba(106,128,226,0.14); color: var(--blue1); }
+.badge-green { background: rgba(34,197,94,0.12); color: #15803d; }
+.badge-red { background: rgba(239,83,80,0.12); color: #b91c1c; }
+.badge-yellow { background: rgba(245,158,11,0.12); color: #b45309; }
+.badge-purple { background: rgba(139,92,246,0.12); color: #6d28d9; }
+[data-theme="dark"] .badge-blue { color: var(--blue2); }
+[data-theme="dark"] .badge-green { color: #4ade80; }
+
+/* ── ALERTS ── */
+.kiwi-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.84rem; font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex; align-items: center; gap: 0.6rem;
+}
+.kiwi-alert-success {
+  background: rgba(34,197,94,0.1);
+  border-left: 4px solid var(--success);
+  color: #15803d;
+}
+.kiwi-alert-error {
+  background: rgba(239,83,80,0.1);
+  border-left: 4px solid var(--danger);
+  color: #b91c1c;
+}
+.kiwi-alert-info {
+  background: rgba(106,128,226,0.1);
+  border-left: 4px solid var(--blue2);
+  color: var(--blue1);
+}
+
+/* ── IDEA CARDS ── */
+.idea-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all var(--transition);
+  box-shadow: var(--shadow);
+}
+.idea-card:hover { border-color: var(--blue2); box-shadow: 0 6px 24px rgba(106,128,226,0.15); }
+.idea-card-header {
+  padding: 1rem 1.1rem;
+  cursor: pointer;
+  display: flex; align-items: flex-start; gap: 0.85rem;
+  border-left: 4px solid var(--blue2);
+}
+.idea-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--blue2); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 800; flex-shrink: 0;
+}
+.idea-expand-body {
+  display: none;
+  padding: 1rem 1.1rem;
+  border-top: 1.5px solid var(--border);
+  background: var(--blue-bg);
+  font-size: 0.82rem; color: var(--text);
+  line-height: 1.7; white-space: pre-line;
+}
+.idea-expand-body.open { display: block; }
+.idea-card-footer {
+  padding: 0.65rem 1.1rem;
+  border-top: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+}
+.guardar-btn.saved { background: #15803d !important; color: white !important; border-color: #15803d !important; }
+
+/* ── MODALS ── */
+.kiwi-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(18,38,102,0.45);
+  z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.kiwi-modal-overlay.show { display: flex; }
+.kiwi-modal {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 480px; width: 92%;
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--border);
+  animation: popIn 0.28s cubic-bezier(.175,.885,.32,1.275);
+}
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.kiwi-modal h3 { font-size: 1.1rem; font-weight: 900; color: var(--blue1); margin-bottom: 0.35rem; }
+[data-theme="dark"] .kiwi-modal h3 { color: var(--blue2); }
+
+/* ── TOAST ── */
+.toast-container-kiwi {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  z-index: 2000;
+  display: flex; flex-direction: column; gap: 0.45rem;
+}
+.kiwi-toast {
+  background: var(--blue3); color: white;
+  padding: 0.8rem 1.1rem; border-radius: 12px;
+  font-size: 0.82rem; font-weight: 700;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center; gap: 0.5rem;
+  min-width: 270px; max-width: 360px;
+  animation: toastIn 0.28s ease;
+}
+.kiwi-toast.ok { background: #15803d; }
+.kiwi-toast.warn { background: #b45309; }
+.kiwi-toast.err { background: #b91c1c; }
+@keyframes toastIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+.kiwi-toast.bye { animation: toastOut 0.28s ease forwards; }
+
+/* ── PAGE HEADER ── */
+.page-header {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1.5px solid var(--border);
+}
+.page-header h1 {
+  font-size: 1.55rem; font-weight: 900; color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.page-header p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
+
+/* ── HERO BANDS ── */
+.kiwi-hero {
+  background: linear-gradient(135deg, var(--blue3) 0%, var(--blue1) 60%, var(--blue2) 100%);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem 2rem;
+  color: white;
+  box-shadow: 0 8px 28px rgba(18,38,102,0.22);
+  position: relative; overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.kiwi-hero::before {
+  content: '';
+  position: absolute; right: -20px; top: -20px;
+  width: 160px; height: 160px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+.kiwi-hero h1 { font-size: 1.45rem; font-weight: 900; margin-bottom: 0.25rem; }
+.kiwi-hero p { font-size: 0.82rem; opacity: 0.82; margin: 0; }
+
+/* ── SEPARATOR ── */
+.kiwi-sep { height: 1.5px; background: var(--border); margin: 1rem 0; }
+
+/* ── PROFILE MODAL ── */
+.profile-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(18,38,102,0.4);
+  z-index: 800;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.profile-modal-overlay.show { display: flex; }
+.profile-modal {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 440px; width: 92%;
+  box-shadow: var(--shadow-lg);
+  border: 1.5px solid var(--border);
+  animation: popIn 0.28s cubic-bezier(.175,.885,.32,1.275);
+}
+.profile-modal h2 { font-size: 1.15rem; font-weight: 900; color: var(--blue1); margin: 0; }
+[data-theme="dark"] .profile-modal h2 { color: var(--blue2); }
+
+/* ── NOTIF MODAL ── */
+.notif-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(18,38,102,0.4);
+  z-index: 900;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.notif-modal-overlay.show { display: flex; }
+.notif-modal {
+  background: var(--surface);
+  border-radius: 20px; padding: 2rem;
+  max-width: 400px; width: 90%;
+  box-shadow: var(--shadow-lg);
+  border: 2px solid var(--blue2);
+  text-align: center;
+  animation: popIn 0.28s cubic-bezier(.175,.885,.32,1.275);
+}
+.notif-modal h3 { font-size: 1.1rem; font-weight: 900; color: var(--blue1); }
+[data-theme="dark"] .notif-modal h3 { color: var(--blue2); }
+
+/* ── TABLES ── */
+.kiwi-table { width: 100%; border-collapse: collapse; }
+.kiwi-table th {
+  padding: 0.6rem 0.9rem; text-align: left;
+  font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); font-weight: 800;
+  border-bottom: 2px solid var(--border);
+}
+.kiwi-table td {
+  padding: 0.85rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.84rem;
+}
+.kiwi-table tr:last-child td { border-bottom: none; }
+.kiwi-table tr:hover td { background: rgba(106,128,226,0.04); }
+
+/* ── TIMELINE / EVENTS ── */
+.event-row {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border);
+  transition: background var(--transition);
+}
+.event-row:last-child { border-bottom: none; }
+.event-row:hover { background: var(--blue-bg); }
+.event-time {
+  font-size: 0.72rem; font-weight: 800; color: var(--blue2);
+  min-width: 42px; padding-top: 2px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.event-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue2); }
+.event-line { width: 1px; height: 24px; background: var(--border); }
+.event-info { flex: 1; }
+.event-title { font-size: 0.84rem; font-weight: 800; color: var(--text); margin-bottom: 0.15rem; }
+.event-meta { font-size: 0.71rem; color: var(--text-muted); }
+.event-actions { display: flex; gap: 0.3rem; align-items: flex-start; }
+
+/* ── QUICK ACTIONS ── */
+.quick-action {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  text-decoration: none; color: var(--text);
+  transition: all var(--transition);
+  background: var(--surface);
+}
+.quick-action:hover {
+  border-color: var(--blue2);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: var(--text);
+}
+.quick-action-icon {
+  width: 42px; height: 42px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.qa-blue { background: rgba(106,128,226,0.14); color: var(--blue2); }
+.qa-green { background: rgba(34,197,94,0.12); color: #15803d; }
+.qa-orange { background: rgba(245,158,11,0.12); color: #b45309; }
+.qa-purple { background: rgba(139,92,246,0.12); color: #6d28d9; }
+.qa-teal { background: rgba(20,184,166,0.12); color: #0f766e; }
+.quick-action-text { flex: 1; }
+.quick-action-text strong { display: block; font-size: 0.84rem; font-weight: 800; margin-bottom: 0.1rem; }
+.quick-action-text span { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center; padding: 2.5rem 1.5rem;
+  color: var(--text-muted);
+}
+.empty-state-icon {
+  font-size: 2.8rem; color: var(--blue2); opacity: 0.5;
+  margin-bottom: 0.75rem;
+}
+.empty-state h4 { font-size: 0.95rem; font-weight: 800; color: var(--text); margin-bottom: 0.3rem; }
+.empty-state p { font-size: 0.8rem; margin: 0; }
+
+/* ── CALENDAR CELLS ── */
+.cal-cell {
+  min-height: 88px; padding: 0.4rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; transition: background var(--transition);
+  position: relative;
+}
+.cal-cell:nth-child(7n) { border-right: none; }
+.cal-cell:hover { background: rgba(106,128,226,0.05); }
+.cal-cell.today .day-num {
+  background: var(--blue2); color: white;
+  border-radius: 50%; width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900;
+}
+.cal-cell.selected { background: rgba(106,128,226,0.08); }
+.cal-cell.other-month .day-num { color: var(--border); }
+.day-num {
+  font-size: 0.78rem; font-weight: 700; color: var(--text);
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; margin-bottom: 0.2rem;
+}
+.cal-event {
+  background: var(--blue2); color: white;
+  border-radius: 4px; padding: 0.12rem 0.35rem;
+  font-size: 0.63rem; font-weight: 700;
+  margin-bottom: 0.1rem; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  transition: filter var(--transition);
+}
+.cal-event:hover { filter: brightness(1.15); }
+.cal-event.done { background: var(--success); }
+.cal-event.recurrent { border-left: 3px solid #f59e0b; }
+.cal-event.more { background: var(--blue-bg); color: var(--blue1); border: 1px solid var(--border); }
+
+/* Satisfaction stars */
+.satisf-btn {
+  font-size: 1rem; cursor: pointer; padding: 0.1rem 0.12rem;
+  border-radius: 5px; transition: transform var(--transition);
+  border: 2px solid transparent;
+}
+.satisf-btn:hover { transform: scale(1.25); }
+.satisf-btn.selected { border-color: var(--blue2); background: rgba(106,128,226,0.1); }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+{% block body %}
+<div class="kiwi-app">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="kiwi-sidebar">
+    <a href="/dashboard/" class="sidebar-brand">
+      <img src="{% static 'kiwi/img/Logokiwi.png' %}" alt="KIWI" style="width:42px;height:42px;object-fit:contain;">
+      <div class="brand-text">
+        <div class="brand-name">KI<span>W</span>I</div>
+        <div class="brand-sub">Bienestar Docente</div>
+      </div>
+    </a>
+
+    <nav class="sidebar-nav">
+      <a href="/dashboard/" class="kiwi-nav-item {% if active == 'dashboard' %}active{% endif %}">
+        <i class="fa-solid fa-house nav-icon"></i>
+        <span>Inicio</span>
+        {% if active == 'dashboard' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+
+      <div class="nav-section-label">Planificacion</div>
+      <a href="/calendario/" class="kiwi-nav-item {% if active == 'calendario' %}active{% endif %}">
+        <i class="fa-solid fa-calendar-days nav-icon"></i>
+        <span>Calendario</span>
+        {% if active == 'calendario' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+      <a href="/plan-aula/" class="kiwi-nav-item {% if active == 'plan_aula' %}active{% endif %}">
+        <i class="fa-solid fa-file-lines nav-icon"></i>
+        <span>Plan de Aula</span>
+        {% if active == 'plan_aula' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+      <a href="/tareas/" class="kiwi-nav-item {% if active == 'tareas' %}active{% endif %}">
+        <i class="fa-solid fa-list-check nav-icon"></i>
+        <span>Tareas</span>
+        {% if active == 'tareas' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+
+      <div class="nav-section-label">Kleit IA</div>
+      <a href="/kleit/" class="kiwi-nav-item {% if active == 'kleit' %}active{% endif %}">
+        <i class="fa-solid fa-cat nav-icon"></i>
+        <span>Asistente Kleit</span>
+        {% if active == 'kleit' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+      <a href="/kleit/ideas-guardadas/" class="kiwi-nav-item {% if active == 'ideas' %}active{% endif %}">
+        <i class="fa-solid fa-folder-open nav-icon"></i>
+        <span>Clases Guardadas</span>
+        {% if active == 'ideas' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+
+      <div class="nav-section-label">Recursos</div>
+      <a href="/recursos/" class="kiwi-nav-item {% if active == 'recursos' %}active{% endif %}">
+        <i class="fa-solid fa-folder-open nav-icon"></i>
+        <span>Banco de Recursos</span>
+        {% if active == 'recursos' %}<div class="nav-active-dot"></div>{% endif %}
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <!-- User info -->
+      <div class="sidebar-user" onclick="openProfile()">
+        <div class="sidebar-avatar">
+          {% if request.session.usuario_foto %}<img src="{{ request.session.usuario_foto }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ usuario_nombre|slice:":1"|upper }}{% endif %}
+        </div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">{{ usuario_nombre }}</div>
+          <div class="sidebar-user-role">Docente</div>
+        </div>
+        <i class="fa-solid fa-pen-to-square" style="font-size:0.7rem;color:var(--text-muted);"></i>
+      </div>
+      <a href="/logout/" class="kiwi-nav-item danger">
+        <i class="fa-solid fa-right-from-bracket nav-icon"></i>
+        <span>Cerrar sesion</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── TOPBAR ── -->
+  <header class="kiwi-topbar">
+    <div class="topbar-title">
+      <i class="fa-solid fa-{% block topbar_icon %}house{% endblock %}" style="color:var(--blue2);font-size:0.9rem;"></i>
+      {% block topbar_title %}Panel Principal{% endblock %}
+    </div>
+    <div class="topbar-right">
+      <!-- Frase del dia -->
+      <div class="topbar-badge" id="fraseChip" style="max-width:320px;cursor:pointer;" title="Frase del dia" onclick="mostrarFrase()">
+        <i class="fa-solid fa-quote-left"></i>
+        <span id="fraseCorta" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;">Cargando frase...</span>
+      </div>
+      <!-- Dark mode -->
+      <div class="dark-toggle-wrap">
+        <i class="fa-solid fa-sun dark-toggle-icon" id="dkIcon"></i>
+        <button class="dark-toggle" id="dkBtn" aria-label="Modo oscuro"></button>
+      </div>
+      <!-- Notifications -->
+      <button class="notif-btn" id="notifBtn" title="Notificaciones">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-count" id="notifCount"></span>
+      </button>
+      <!-- User chip -->
+      <div class="user-chip-top" id="userChipTop">
+        <div class="user-chip-avatar">
+          {% if request.session.usuario_foto %}<img src="{{ request.session.usuario_foto }}" style="width:100%;height:100%;object-fit:cover;">{% else %}{{ usuario_nombre|slice:":1"|upper }}{% endif %}
+        </div>
+        <span class="user-chip-name">{{ usuario_nombre }}</span>
+        <i class="fa-solid fa-chevron-down user-chip-caret"></i>
+        <div class="user-dropdown-menu">
+          <button class="dd-item" onclick="openProfile()">
+            <i class="fa-solid fa-user-pen"></i> Editar perfil
+          </button>
+          <div class="dd-sep"></div>
+          <a href="/logout/" class="dd-item red">
+            <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesion
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="kiwi-main">
+    <div class="kiwi-page">
+      {% if messages %}
+        {% for msg in messages %}
+        <div class="kiwi-alert {% if msg.tags == 'success' %}kiwi-alert-success{% else %}kiwi-alert-error{% endif %}" id="kiwi-django-msg">
+          <i class="fa-solid fa-{% if msg.tags == 'success' %}circle-check{% else %}circle-xmark{% endif %}"></i>
+          {{ msg }}
+        </div>
+        {% endfor %}
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+
+<!-- ── NOTIFICATION MODAL ── -->
+<div class="notif-modal-overlay" id="notifOverlay">
+  <div class="notif-modal">
+    <i class="fa-solid fa-bell" style="font-size:2rem;color:var(--blue2);margin-bottom:0.75rem;"></i>
+    <h3 id="notifTitle">Clase proxima</h3>
+    <p id="notifDesc" style="color:var(--text-muted);font-size:0.85rem;margin:0.5rem 0 1.25rem;"></p>
+    <div style="display:flex;gap:0.65rem;justify-content:center;">
+      <button class="btn-kiwi btn-kiwi-primary" onclick="closeNotif()">
+        <i class="fa-solid fa-check"></i> Entendido
+      </button>
+      <a href="/calendario/" class="btn-kiwi btn-kiwi-ghost">
+        <i class="fa-solid fa-calendar"></i> Ver calendario
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── FRASE MODAL ── -->
+<div class="notif-modal-overlay" id="fraseOverlay" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="kiwi-modal" style="text-align:center;">
+    <i class="fa-solid fa-heart" style="font-size:2rem;color:var(--blue2);margin-bottom:0.75rem;"></i>
+    <h3 id="fraseTitulo">Frase del dia</h3>
+    <blockquote id="fraseTextoFull" style="font-size:0.95rem;color:var(--text);line-height:1.65;margin:0.75rem 0;font-style:italic;border-left:3px solid var(--blue2);padding-left:1rem;text-align:left;"></blockquote>
+    <p id="fraseAutor" style="font-size:0.75rem;color:var(--text-muted);font-weight:700;margin:0;"></p>
+    <button class="btn-kiwi btn-kiwi-ghost btn-kiwi-sm" onclick="document.getElementById('fraseOverlay').classList.remove('show')" style="margin-top:1rem;">
+      Cerrar
+    </button>
+  </div>
+</div>
+
+<!-- ── PROFILE MODAL ── -->
+<div class="profile-modal-overlay" id="profileModal">
+  <div class="profile-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+      <div>
+        <h2><i class="fa-solid fa-user-pen" style="color:var(--blue2);margin-right:0.4rem;font-size:0.9rem;"></i>Editar perfil</h2>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin:0;">Actualiza tu informacion de docente</p>
+      </div>
+      <button onclick="closeProfile()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="post" action="/perfil/" enctype="multipart/form-data">
+      {% csrf_token %}
+      <!-- Foto de perfil -->
+      <div class="mb-3" style="display:flex;align-items:center;gap:1.25rem;">
+        <div id="fotoPreview" style="width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;
+             background:linear-gradient(135deg,var(--blue3),var(--blue2));
+             display:flex;align-items:center;justify-content:center;
+             color:white;font-size:1.5rem;font-weight:800;border:2.5px solid var(--border);">
+          {% if request.session.usuario_foto %}
+          <img src="{{ request.session.usuario_foto }}" id="fotoImg" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}
+          <span id="fotoInitial">{{ usuario_nombre|slice:":1"|upper }}</span>
+          {% endif %}
+        </div>
+        <div>
+          <label class="form-label" style="margin-bottom:0.3rem;">Foto de perfil</label>
+          <label style="display:inline-flex;align-items:center;gap:0.4rem;cursor:pointer;
+                 background:var(--blue-bg);border:1.5px solid var(--border);
+                 border-radius:8px;padding:0.4rem 0.85rem;font-size:0.8rem;font-weight:700;color:var(--text);
+                 transition:border-color 0.18s;">
+            <i class="fa-solid fa-camera" style="color:var(--blue2);font-size:0.85rem;"></i>
+            Cambiar foto
+            <input type="file" name="foto" id="fotoInput" accept="image/jpeg,image/png,image/webp,image/gif"
+                   style="display:none;" onchange="previewFoto(this)">
+          </label>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.3rem;">JPG, PNG, WEBP o GIF · máx. 5 MB</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Nombre de usuario</label>
+        <input type="text" class="form-control" name="nombre" value="{{ usuario_nombre }}" placeholder="Tu nombre" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Correo electronico</label>
+        <input type="email" class="form-control" name="correo" value="{{ usuario_correo|default:'' }}" placeholder="tucorreo@institución.edu.co">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Institucion educativa</label>
+        <input type="text" class="form-control" name="institucion" value="{{ usuario_institucion|default:'' }}" placeholder="Colegio San Francisco de Asis">
+      </div>
+      <div style="display:flex;gap:0.65rem;justify-content:flex-end;">
+        <button type="button" class="btn-kiwi btn-kiwi-ghost" onclick="closeProfile()">Cancelar</button>
+        <button type="submit" class="btn-kiwi btn-kiwi-primary">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── TOAST CONTAINER ── -->
+<div class="toast-container-kiwi" id="toastWrap"></div>
+
+{% endblock %}
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Dark mode ──
+const dkBtn = document.getElementById('dkBtn');
+const dkIcon = document.getElementById('dkIcon');
+const html = document.documentElement;
+function setDark(d) {
+  html.dataset.theme = d ? 'dark' : 'light';
+  dkBtn?.classList.toggle('on', d);
+  if (dkIcon) {
+    dkIcon.className = d ? 'fa-solid fa-moon dark-toggle-icon' : 'fa-solid fa-sun dark-toggle-icon';
+  }
+  localStorage.setItem('kw-dark', d ? '1' : '0');
+}
+dkBtn?.addEventListener('click', () => setDark(html.dataset.theme !== 'dark'));
+if (localStorage.getItem('kw-dark') === '1') setDark(true);
+
+// ── User dropdown ──
+const userChipTop = document.getElementById('userChipTop');
+userChipTop?.addEventListener('click', function(e) {
+  this.classList.toggle('open');
+  e.stopPropagation();
+});
+document.addEventListener('click', () => userChipTop?.classList.remove('open'));
+
+// ── Toast ──
+function toast(msg, type='info') {
+  const w = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  const icons = { ok: 'fa-circle-check', warn: 'fa-triangle-exclamation', err: 'fa-circle-xmark', info: 'fa-bell' };
+  t.className = `kiwi-toast ${type}`;
+  t.innerHTML = `<i class="fa-solid ${icons[type]||icons.info}"></i>${msg}`;
+  w.appendChild(t);
+  setTimeout(() => {
+    t.classList.add('bye');
+    setTimeout(() => t.remove(), 320);
+  }, 3800);
+}
+
+// ── Notifications ──
+function loadSeenNotifs() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('kw-seen-v2') || '{}');
+    const cutoff = Date.now() - 86400000;
+    const valid = {};
+    Object.keys(raw).forEach(k => { if (raw[k] > cutoff) valid[k] = raw[k]; });
+    localStorage.setItem('kw-seen-v2', JSON.stringify(valid));
+    return new Set(Object.keys(valid).map(Number));
+  } catch(e) { return new Set(); }
+}
+const seenNotifs = loadSeenNotifs();
+let notifQueue = [], notifCurrent = null;
+function closeNotif() {
+  document.getElementById('notifOverlay').classList.remove('show');
+  if (notifCurrent !== null) {
+    seenNotifs.add(notifCurrent);
+    const raw = JSON.parse(localStorage.getItem('kw-seen-v2') || '{}');
+    raw[notifCurrent] = Date.now();
+    localStorage.setItem('kw-seen-v2', JSON.stringify(raw));
+  }
+  notifCurrent = null;
+  if (notifQueue.length) showNextNotif();
+}
+function showNextNotif() {
+  if (!notifQueue.length) return;
+  const c = notifQueue.shift();
+  notifCurrent = c.id;
+  document.getElementById('notifTitle').textContent = `Clase en ${c.minutos} min`;
+  document.getElementById('notifDesc').textContent = `${c.titulo} — Grupo ${c.grupo} a las ${c.hora}`;
+  document.getElementById('notifOverlay').classList.add('show');
+}
+async function checkNotifs() {
+  try {
+    const r = await fetch('/api/notificaciones/');
+    const d = await r.json();
+    const badge = document.getElementById('notifCount');
+    const nuevas = d.clases.filter(c => !seenNotifs.has(c.id));
+    if (nuevas.length) {
+      badge.style.display = 'flex';
+      badge.textContent = nuevas.length;
+      notifQueue.push(...nuevas);
+      if (!notifCurrent) showNextNotif();
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e) {}
+}
+document.getElementById('notifBtn')?.addEventListener('click', () => {
+  if (notifQueue.length) showNextNotif();
+  else toast('Sin clases proximas en los proximos 15 minutos', 'info');
+});
+checkNotifs();
+setInterval(checkNotifs, 60000);
+
+// ── Frase del dia ──
+let fraseData = null;
+async function loadFrase() {
+  try {
+    const r = await fetch('/api/frase-dia/');
+    fraseData = await r.json();
+    const texto = fraseData.frase || fraseData.texto || '';
+    const corta = texto.length > 60 ? texto.slice(0, 60) + '…' : texto;
+    const el = document.getElementById('fraseCorta');
+    if (el) el.textContent = corta;
+  } catch(e) {}
+}
+function mostrarFrase() {
+  if (!fraseData) return;
+  document.getElementById('fraseTitulo').textContent = 'Frase del dia';
+  document.getElementById('fraseTextoFull').textContent = fraseData.frase || fraseData.texto || '';
+  document.getElementById('fraseAutor').textContent = (fraseData.autor || '') + (fraseData.fuente ? ' — ' + fraseData.fuente : '');
+  document.getElementById('fraseOverlay').classList.add('show');
+}
+loadFrase();
+
+// ── Guardar idea ──
+function toggleGuardar(btn, id) {
+  fetch(`/kleit/guardar/${id}/`, { method: 'POST', headers: { 'X-CSRFToken': getCsrf() } })
+    .then(r => r.json())
+    .then(d => {
+      if (d.guardada) {
+        btn.classList.add('saved');
+        btn.innerHTML = '<i class="fa-solid fa-bookmark"></i> Guardada';
+        toast('Idea guardada correctamente', 'ok');
+      } else {
+        btn.classList.remove('saved');
+        btn.innerHTML = '<i class="fa-regular fa-bookmark"></i> Guardar';
+      }
+    });
+}
+
+// ── Expandir idea ──
+function toggleExpand(id) {
+  const el = document.getElementById('exp-' + id);
+  const btn = document.getElementById('ebtn-' + id);
+  if (!el) return;
+  const open = el.classList.toggle('open');
+  if (btn) {
+    btn.innerHTML = open
+      ? '<i class="fa-solid fa-chevron-up"></i> Ocultar detalle'
+      : '<i class="fa-solid fa-chevron-down"></i> Ver actividad completa';
+  }
+}
+
+// ── CSRF ──
+function getCsrf() {
+  let v = null;
+  document.cookie.split(';').forEach(c => {
+    c = c.trim();
+    if (c.startsWith('csrftoken=')) v = decodeURIComponent(c.slice(10));
+  });
+  return v;
+}
+
+// ── Profile modal ──
+function openProfile() {
+  document.getElementById('profileModal').classList.add('show');
+  userChipTop?.classList.remove('open');
+}
+function closeProfile() {
+  document.getElementById('profileModal').classList.remove('show');
+}
+document.getElementById('profileModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeProfile();
+});
+function previewFoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const preview = document.getElementById('fotoPreview');
+    preview.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// Auto-dismiss Django messages
+setTimeout(() => {
+  const el = document.getElementById('kiwi-django-msg');
+  if (el) el.style.transition = 'opacity 0.5s';
+  if (el) setTimeout(() => el.remove(), 500);
+  if (el) el.style.opacity = '0';
+}, 4000);
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

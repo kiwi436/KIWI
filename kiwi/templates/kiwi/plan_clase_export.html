@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load static %}
+<head>
+  <meta charset="UTF-8">
+  <title>Plan de Clase — {{ idea.titulo }}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10pt;
+      color: #000;
+      background: #e0e0e0;
+    }
+
+    /* ── BARRA SUPERIOR (solo en navegador, no en PDF) ── */
+    .no-print {
+      background: #1a1a2e;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .btn-export {
+      background: #C00000; color: #fff; border: none;
+      padding: 9px 28px; font-size: 13px; font-weight: bold;
+      cursor: pointer; border-radius: 4px;
+    }
+    .btn-back {
+      background: transparent; color: #bbb; border: 1px solid #555;
+      padding: 9px 18px; font-size: 12px; cursor: pointer;
+      border-radius: 4px; text-decoration: none;
+    }
+
+    /* ── PÁGINA — vista en navegador ── */
+    .page {
+      width: 170mm;
+      margin: 20px auto;
+      background: #fff;
+      padding: 12mm 10mm 16mm 10mm;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.3);
+    }
+
+    /* ── ENCABEZADO ── */
+    .enc-outer {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+    }
+    .enc-outer td {
+      border: 1px solid #000;
+      vertical-align: middle;
+    }
+    .enc-logo-cell {
+      width: 60px;
+      text-align: center;
+      padding: 7px 5px;
+    }
+    .enc-logo-cell img {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+    .enc-info-cell {
+      vertical-align: top;
+      padding: 0;
+    }
+    .enc-info-inner {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .enc-info-inner td {
+      border: none;
+      border-bottom: 1px solid #000;
+      padding: 5px 10px;
+    }
+    .enc-info-inner tr:last-child td {
+      border-bottom: none;
+    }
+    .enc-colegio {
+      font-size: 10pt;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.35;
+    }
+    .enc-sub {
+      font-size: 7.5pt;
+      font-weight: normal;
+    }
+    .enc-tipo {
+      font-size: 9pt;
+      font-weight: bold;
+      text-align: center;
+      width: 50%;
+      border-right: 1px solid #000 !important;
+    }
+    .enc-docente {
+      font-size: 8pt;
+      text-align: center;
+      width: 50%;
+    }
+    .enc-area {
+      width: 28%;
+      text-align: center;
+      vertical-align: middle;
+      padding: 6px 8px;
+      font-size: 11pt;
+      font-weight: bold;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    /* ── TABLAS GRADO / TEMA ── */
+    .fila-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid #000;
+      border-top: none;
+    }
+    .fila-table td {
+      border: 1px solid #000;
+      padding: 4px 7px;
+      font-size: 8.5pt;
+      vertical-align: middle;
+    }
+    .lbl {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 7.5pt;
+      white-space: nowrap;
+    }
+
+    /* ── CUERPO ── */
+    .cuerpo {
+      margin-top: 9pt;
+      font-size: 9pt;
+      line-height: 1.65;
+    }
+    .bloque { margin-bottom: 8pt; }
+    .bloque-titulo {
+      font-size: 9.5pt;
+      font-weight: bold;
+      margin-bottom: 3pt;
+    }
+    .lista { padding-left: 15px; margin: 0; }
+    .lista li { margin-bottom: 2pt; line-height: 1.55; }
+    .paso { margin-bottom: 4pt; line-height: 1.6; }
+
+    /* ── PIE ── */
+    .pie {
+      margin-top: 14pt;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #666;
+    }
+    .pie-marca { color: #C00000; font-weight: bold; font-size: 8pt; }
+
+    /* ── PRINT / PDF ── */
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .page {
+        width: auto;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 20mm 18mm 25mm 18mm;
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print">
+  <a href="/kleit/ideas-guardadas/" class="btn-back">← Volver a Clases Guardadas</a>
+  <button onclick="window.print()" class="btn-export">⬇ Exportar / Imprimir PDF</button>
+</div>
+
+<div class="page">
+
+  <!-- ══ ENCABEZADO ══ -->
+  <table class="enc-outer">
+    <tr>
+      <!-- Logo -->
+      <td class="enc-logo-cell">
+        <img src="{% static 'kiwi/img/logo_cosfa.png' %}" alt="Logo">
+      </td>
+      <!-- Bloque central: nombre + tipo + docente -->
+      <td class="enc-info-cell">
+        <table class="enc-info-inner">
+          <tr>
+            <td class="enc-colegio" colspan="2">
+              COLEGIO SAN FRANCISCO DE ASÍS<br>
+              <span class="enc-sub">Orden de Hermanos Menores Capuchinos</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="enc-tipo">PLAN DE CLASE</td>
+            <td class="enc-docente">Docente {{ usuario_nombre }}</td>
+          </tr>
+        </table>
+      </td>
+      <!-- Área / Materia -->
+      <td class="enc-area">EMOCIONES</td>
+    </tr>
+  </table>
+
+  <!-- ══ GRADO / SEMANA / FECHA ══ -->
+  <table class="fila-table">
+    <tr>
+      <td class="lbl" style="width:10%;">Grado</td>
+      <td style="width:16%;">{{ idea.grupo_original }}</td>
+      <td class="lbl" style="width:10%;">Semana</td>
+      <td style="width:8%;">{{ semana }}</td>
+      <td>{{ fecha }}</td>
+    </tr>
+  </table>
+
+  <!-- ══ TEMA ══ -->
+  <table class="fila-table">
+    <tr>
+      <td class="lbl" style="width:10%;">Tema</td>
+      <td>{{ tema }}</td>
+    </tr>
+  </table>
+
+  <!-- ══ CUERPO ══ -->
+  <div class="cuerpo">
+
+    {% if datos.duracion %}
+    <div class="bloque">
+      <strong>Duración:</strong> {{ datos.duracion }}
+    </div>
+    {% endif %}
+
+    {% if datos.materiales %}
+    <div class="bloque">
+      <div class="bloque-titulo">Materiales</div>
+      <ul class="lista">
+        {% for m in datos.materiales %}<li>{{ m }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if datos.pasos %}
+    <div class="bloque">
+      <div class="bloque-titulo">Desarrollo</div>
+      {% for paso in datos.pasos %}
+      <div class="paso"><strong>{{ forloop.counter }}.</strong> {{ paso }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if datos.preguntas_reflexion %}
+    <div class="bloque">
+      <div class="bloque-titulo">Preguntas de reflexión</div>
+      <ul class="lista">
+        {% for p in datos.preguntas_reflexion %}<li>{{ p }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if datos.indicador_logro %}
+    <div class="bloque">
+      <div class="bloque-titulo">Indicador de logro</div>
+      <div>{{ datos.indicador_logro }}</div>
+    </div>
+    {% endif %}
+
+    {% if datos.adaptacion_primaria or datos.adaptacion_bachillerato %}
+    <div class="bloque">
+      <div class="bloque-titulo">Adaptaciones</div>
+      <ul class="lista">
+        {% if datos.adaptacion_primaria %}
+        <li><strong>Primaria:</strong> {{ datos.adaptacion_primaria }}</li>
+        {% endif %}
+        {% if datos.adaptacion_bachillerato %}
+        <li><strong>Bachillerato:</strong> {{ datos.adaptacion_bachillerato }}</li>
+        {% endif %}
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if recursos %}
+    <div class="bloque">
+      <div class="bloque-titulo">Recursos digitales</div>
+      <ul class="lista">
+        {% for r in recursos %}<li>{{ r }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="pie">
+    <span>Generado con K.I.W.I. · Kleit IA</span>
+    <span class="pie-marca">#SomosFraternos</span>
+  </div>
+
+</div>
+</body>
+</html>
