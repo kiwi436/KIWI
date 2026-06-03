@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python312"]
+nixPkgs = ["python312", "freetype", "cairo", "pango", "gcc", "pkg-config", "xorg.libxcb", "xorg.libX11", "gdk-pixbuf"]
 
 [phases.build]
 cmds = ["pip install -r requirements.txt", "python manage.py collectstatic --noinput", "python manage.py migrate"]
