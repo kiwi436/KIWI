@@ -8,37 +8,39 @@ logger = logging.getLogger(__name__)
 
 
 def enviar_email(destinatario: str, asunto: str, cuerpo: str) -> bool:
-    """Envía un email via Resend API (HTTP directo, sin SMTP)."""
-    api_key = getattr(settings, 'RESEND_API_KEY', '')
+    """Envía un email via Brevo (Sendinblue) API — HTTP directo, sin SMTP."""
+    api_key = getattr(settings, 'BREVO_API_KEY', '')
     if not api_key:
-        logger.warning('RESEND_API_KEY no configurada — email no enviado.')
+        logger.warning('BREVO_API_KEY no configurada — email no enviado.')
         return False
 
-    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'KIWI <onboarding@resend.dev>')
+    nombre_remitente = 'KIWI'
+    email_remitente = getattr(settings, 'EMAIL_HOST_USER', 'noreply@kiwi.edu.co')
 
     payload = json.dumps({
-        'from': from_email,
-        'to': [destinatario],
+        'sender': {'name': nombre_remitente, 'email': email_remitente},
+        'to': [{'email': destinatario}],
         'subject': asunto,
-        'text': cuerpo,
+        'textContent': cuerpo,
     }).encode('utf-8')
 
     req = urllib.request.Request(
-        'https://api.resend.com/emails',
+        'https://api.brevo.com/v3/smtp/email',
         data=payload,
         headers={
-            'Authorization': f'Bearer {api_key}',
+            'api-key': api_key,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
         },
         method='POST',
     )
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
-            logger.info(f'Email enviado a {destinatario} — status {resp.status}')
+            logger.info(f'Email enviado a {destinatario} via Brevo — status {resp.status}')
             return True
     except urllib.error.HTTPError as e:
         body = e.read().decode('utf-8', errors='replace')
-        logger.error(f'Resend HTTP {e.code} enviando a {destinatario}: {body}')
+        logger.error(f'Brevo HTTP {e.code} enviando a {destinatario}: {body}')
         return False
     except Exception as e:
         logger.error(f'Error enviando email a {destinatario}: {type(e).__name__}: {e}')
