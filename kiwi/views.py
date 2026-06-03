@@ -122,7 +122,7 @@ def registro_view(request):
                 error = 'Ya existe una cuenta con ese correo.'
             else:
                 import random
-                from django.core.mail import send_mail
+                from .email_utils import enviar_email
                 nombre = request.session.get('reg_nombre', correo.split('@')[0])
                 codigo = str(random.randint(100000, 999999))
                 usuario = Usuario.objects.create(
@@ -135,27 +135,19 @@ def registro_view(request):
                     email_verificado=False,
                     token_verificacion=codigo,
                 )
-                email_enviado = False
-                try:
-                    send_mail(
-                        subject='Tu código de verificación KIWI',
-                        message=(
-                            f'Hola {nombre},\n\n'
-                            f'Tu código de verificación es:\n\n'
-                            f'        {codigo}\n\n'
-                            f'Ingrésalo en la aplicación para activar tu cuenta.\n'
-                            f'El código expira cuando solicites uno nuevo.\n\n'
-                            f'Si no creaste esta cuenta puedes ignorar este mensaje.\n\n'
-                            f'— El equipo de KIWI'
-                        ),
-                        from_email=None,
-                        recipient_list=[correo],
-                        fail_silently=False,
-                    )
-                    email_enviado = True
-                except Exception as e:
-                    import logging
-                    logging.getLogger(__name__).error(f'Error enviando correo de verificación a {correo}: {e}')
+                email_enviado = enviar_email(
+                    destinatario=correo,
+                    asunto='Tu código de verificación KIWI',
+                    cuerpo=(
+                        f'Hola {nombre},\n\n'
+                        f'Tu código de verificación es:\n\n'
+                        f'        {codigo}\n\n'
+                        f'Ingrésalo en la aplicación para activar tu cuenta.\n'
+                        f'El código expira cuando solicites uno nuevo.\n\n'
+                        f'Si no creaste esta cuenta puedes ignorar este mensaje.\n\n'
+                        f'— El equipo de KIWI'
+                    ),
+                )
                 return render(request, 'kiwi/registro.html', {
                     'verificacion_enviada': True,
                     'correo': correo,
@@ -198,30 +190,24 @@ def verificar_email_view(request):
 def reenviar_verificacion_view(request):
     if request.method == 'POST':
         import random
-        from django.core.mail import send_mail
+        from .email_utils import enviar_email
         correo = request.POST.get('correo', '').strip()
         try:
             usuario = Usuario.objects.get(correo=correo, email_verificado=False)
             codigo = str(random.randint(100000, 999999))
             usuario.token_verificacion = codigo
             usuario.save()
-            try:
-                send_mail(
-                    subject='Tu código de verificación KIWI',
-                    message=(
-                        f'Hola {usuario.nombre},\n\n'
-                        f'Tu nuevo código de verificación es:\n\n'
-                        f'        {codigo}\n\n'
-                        f'Ingrésalo en la aplicación para activar tu cuenta.\n\n'
-                        f'— El equipo de KIWI'
-                    ),
-                    from_email=None,
-                    recipient_list=[correo],
-                    fail_silently=False,
-                )
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f'Error reenviando código a {correo}: {e}')
+            enviar_email(
+                destinatario=correo,
+                asunto='Tu código de verificación KIWI',
+                cuerpo=(
+                    f'Hola {usuario.nombre},\n\n'
+                    f'Tu nuevo código de verificación es:\n\n'
+                    f'        {codigo}\n\n'
+                    f'Ingrésalo en la aplicación para activar tu cuenta.\n\n'
+                    f'— El equipo de KIWI'
+                ),
+            )
         except Usuario.DoesNotExist:
             pass
     correo = request.POST.get('correo', '').strip()
@@ -232,33 +218,25 @@ def recuperar_password_view(request):
     """Paso 1: el usuario ingresa su correo y recibe un código de 6 dígitos."""
     if request.method == 'POST':
         import random
-        from django.core.mail import send_mail
+        from .email_utils import enviar_email
         correo = request.POST.get('correo', '').strip().lower()
         try:
             usuario = Usuario.objects.get(correo=correo)
             codigo = str(random.randint(100000, 999999))
             usuario.token_verificacion = codigo
             usuario.save()
-            email_enviado = False
-            try:
-                send_mail(
-                    subject='Recupera tu contraseña KIWI',
-                    message=(
-                        f'Hola {usuario.nombre},\n\n'
-                        f'Tu código para restablecer la contraseña es:\n\n'
-                        f'        {codigo}\n\n'
-                        f'Ingrésalo en la aplicación para crear una nueva contraseña.\n'
-                        f'Si no solicitaste esto, ignora este mensaje.\n\n'
-                        f'— El equipo de KIWI'
-                    ),
-                    from_email=None,
-                    recipient_list=[correo],
-                    fail_silently=False,
-                )
-                email_enviado = True
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f'Error enviando correo recuperación a {correo}: {e}')
+            email_enviado = enviar_email(
+                destinatario=correo,
+                asunto='Recupera tu contraseña KIWI',
+                cuerpo=(
+                    f'Hola {usuario.nombre},\n\n'
+                    f'Tu código para restablecer la contraseña es:\n\n'
+                    f'        {codigo}\n\n'
+                    f'Ingrésalo en la aplicación para crear una nueva contraseña.\n'
+                    f'Si no solicitaste esto, ignora este mensaje.\n\n'
+                    f'— El equipo de KIWI'
+                ),
+            )
             return render(request, 'kiwi/recuperar_password.html', {
                 'paso': 2,
                 'correo': correo,

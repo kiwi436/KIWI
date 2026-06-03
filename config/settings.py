@@ -23,7 +23,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'kiwi',
-    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -98,16 +97,6 @@ CSRF_TRUSTED_ORIGINS = [h.strip() for h in _trusted.split(',') if h.strip()]
 
 # ── EMAIL ───────────────────────────────────────────────────────
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
-if RESEND_API_KEY:
-    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
-    ANYMAIL = {'RESEND_API_KEY': RESEND_API_KEY}
-else:
-    EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-    EMAIL_HOST     = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT     = int(os.getenv('EMAIL_PORT', '587'))
-    EMAIL_USE_TLS  = True
-    EMAIL_HOST_USER     = os.getenv('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'KIWI <onboarding@resend.dev>')
 
 # ── GEMINI API ──────────────────────────────────────────────────
