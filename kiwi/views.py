@@ -228,6 +228,100 @@ def reenviar_verificacion_view(request):
     return redirect(f'/verificar-email/?correo={correo}')
 
 
+def recuperar_password_view(request):
+    """Paso 1: el usuario ingresa su correo y recibe un código de 6 dígitos."""
+    if request.method == 'POST':
+        import random
+        from django.core.mail import send_mail
+        correo = request.POST.get('correo', '').strip().lower()
+        try:
+            usuario = Usuario.objects.get(correo=correo)
+            codigo = str(random.randint(100000, 999999))
+            usuario.token_verificacion = codigo
+            usuario.save()
+            email_enviado = False
+            try:
+                send_mail(
+                    subject='Recupera tu contraseña KIWI',
+                    message=(
+                        f'Hola {usuario.nombre},\n\n'
+                        f'Tu código para restablecer la contraseña es:\n\n'
+                        f'        {codigo}\n\n'
+                        f'Ingrésalo en la aplicación para crear una nueva contraseña.\n'
+                        f'Si no solicitaste esto, ignora este mensaje.\n\n'
+                        f'— El equipo de KIWI'
+                    ),
+                    from_email=None,
+                    recipient_list=[correo],
+                    fail_silently=False,
+                )
+                email_enviado = True
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f'Error enviando correo recuperación a {correo}: {e}')
+            return render(request, 'kiwi/recuperar_password.html', {
+                'paso': 2,
+                'correo': correo,
+                'email_enviado': email_enviado,
+                'codigo_fallback': codigo if not email_enviado else None,
+            })
+        except Usuario.DoesNotExist:
+            return render(request, 'kiwi/recuperar_password.html', {
+                'paso': 1,
+                'error': 'No existe ninguna cuenta con ese correo.',
+            })
+    return render(request, 'kiwi/recuperar_password.html', {'paso': 1})
+
+
+def recuperar_password_confirmar_view(request):
+    """Paso 2 y 3: verifica el código y establece la nueva contraseña."""
+    if request.method == 'POST':
+        correo = request.POST.get('correo', '').strip().lower()
+        codigo = request.POST.get('codigo', '').strip()
+        nueva = request.POST.get('nueva_password', '')
+        confirmar = request.POST.get('confirmar_password', '')
+        try:
+            usuario = Usuario.objects.get(correo=correo, token_verificacion=codigo)
+        except Usuario.DoesNotExist:
+            return render(request, 'kiwi/recuperar_password.html', {
+                'paso': 2,
+                'correo': correo,
+                'error': 'Código incorrecto. Verifica que lo hayas escrito bien.',
+                'email_enviado': True,
+            })
+        if len(nueva) < 8:
+            return render(request, 'kiwi/recuperar_password.html', {
+                'paso': 3,
+                'correo': correo,
+                'codigo': codigo,
+                'error': 'La contraseña debe tener al menos 8 caracteres.',
+            })
+        if nueva != confirmar:
+            return render(request, 'kiwi/recuperar_password.html', {
+                'paso': 3,
+                'correo': correo,
+                'codigo': codigo,
+                'error': 'Las contraseñas no coinciden.',
+            })
+        usuario.password_hash = sha256(nueva.encode()).hexdigest()
+        usuario.token_verificacion = ''
+        usuario.save()
+        messages.success(request, '¡Contraseña actualizada! Ya puedes iniciar sesión.')
+        return redirect('login')
+    # GET con código ya verificado → mostrar formulario de nueva contraseña
+    correo = request.GET.get('correo', '')
+    codigo = request.GET.get('codigo', '')
+    if correo and codigo:
+        try:
+            Usuario.objects.get(correo=correo, token_verificacion=codigo)
+            return render(request, 'kiwi/recuperar_password.html', {
+                'paso': 3, 'correo': correo, 'codigo': codigo,
+            })
+        except Usuario.DoesNotExist:
+            pass
+    return redirect('recuperar_password')
+
+
 def dashboard(request):
     if not _login_required(request):
         return redirect('login')

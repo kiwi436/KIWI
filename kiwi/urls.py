@@ -11,6 +11,8 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('verificar-email/', views.verificar_email_view, name='verificar_email'),
     path('reenviar-verificacion/', views.reenviar_verificacion_view, name='reenviar_verificacion'),
+    path('recuperar-password/', views.recuperar_password_view, name='recuperar_password'),
+    path('recuperar-password/confirmar/', views.recuperar_password_confirmar_view, name='recuperar_password_confirmar'),
     path('perfil/', views.perfil_view, name='perfil'),
 
     # ── App ──────────────────────────────────────────────────────
