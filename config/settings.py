@@ -96,9 +96,8 @@ _trusted = os.getenv('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [h.strip() for h in _trusted.split(',') if h.strip()]
 
 # ── EMAIL ───────────────────────────────────────────────────────
-BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'noreply@kiwi.edu.co')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'KIWI <noreply@kiwi.edu.co>')
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'KIWI <noreply@kiwi.com>')
 
 # ── GEMINI API ──────────────────────────────────────────────────
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
