@@ -66,10 +66,27 @@ def login_view(request):
                 usuario = Usuario.objects.get(correo=correo)
                 if usuario.password_hash == sha256(password.encode()).hexdigest():
                     if not usuario.email_verificado:
-                        return render(request, 'kiwi/login.html', {
-                            'error': 'Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.',
-                            'correo_sin_verificar': correo,
-                        })
+                        import random
+                        from .email_utils import enviar_email
+                        codigo = str(random.randint(100000, 999999))
+                        usuario.token_verificacion = codigo
+                        usuario.save()
+                        email_enviado = enviar_email(
+                            destinatario=correo,
+                            asunto='Tu código de verificación KIWI',
+                            cuerpo=(
+                                f'Hola {usuario.nombre},\n\n'
+                                f'Tu código de verificación es:\n\n'
+                                f'        {codigo}\n\n'
+                                f'Ingrésalo en la aplicación para activar tu cuenta.\n\n'
+                                f'— El equipo de KIWI'
+                            ),
+                        )
+                        if not email_enviado:
+                            request.session['verificacion_codigo_fallback'] = codigo
+                            request.session['verificacion_correo_fallback'] = correo
+                            request.session.modified = True
+                        return redirect(f'/verificar-email/?correo={correo}')
                     request.session['usuario_id'] = usuario.pk
                     request.session['usuario_nombre'] = usuario.nombre
                     request.session['usuario_correo'] = usuario.correo
@@ -184,7 +201,12 @@ def verificar_email_view(request):
                 'error': 'Código incorrecto. Verifica que lo hayas escrito bien o solicita uno nuevo.',
             })
     correo = request.GET.get('correo', '')
-    return render(request, 'kiwi/verificar_email.html', {'correo': correo})
+    codigo_fallback = None
+    if request.session.get('verificacion_correo_fallback') == correo:
+        codigo_fallback = request.session.pop('verificacion_codigo_fallback', None)
+        request.session.pop('verificacion_correo_fallback', None)
+        request.session.modified = True
+    return render(request, 'kiwi/verificar_email.html', {'correo': correo, 'codigo_fallback': codigo_fallback})
 
 
 def reenviar_verificacion_view(request):
@@ -197,7 +219,7 @@ def reenviar_verificacion_view(request):
             codigo = str(random.randint(100000, 999999))
             usuario.token_verificacion = codigo
             usuario.save()
-            enviar_email(
+            email_enviado = enviar_email(
                 destinatario=correo,
                 asunto='Tu código de verificación KIWI',
                 cuerpo=(
@@ -208,6 +230,10 @@ def reenviar_verificacion_view(request):
                     f'— El equipo de KIWI'
                 ),
             )
+            if not email_enviado:
+                request.session['verificacion_codigo_fallback'] = codigo
+                request.session['verificacion_correo_fallback'] = correo
+                request.session.modified = True
         except Usuario.DoesNotExist:
             pass
     correo = request.POST.get('correo', '').strip()

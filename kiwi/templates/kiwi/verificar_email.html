@@ -34,8 +34,16 @@ h1{font-size:1.6rem;font-weight:900;margin-bottom:0.4rem;}
 <body>
 <div class="card">
   <div class="icon">📬</div>
-  <h1>Revisa tu correo</h1>
+  <h1>Verifica tu cuenta</h1>
+  {% if codigo_fallback %}
+  <p class="sub">El correo no pudo enviarse. Usa este código:</p>
+  <div style="background:rgba(255,193,7,0.15);border:1.5px solid rgba(255,193,7,0.5);border-radius:14px;padding:1rem 1.5rem;margin-bottom:1.25rem;">
+    <div style="font-size:0.78rem;opacity:0.8;margin-bottom:0.3rem;">Tu código de verificación:</div>
+    <div style="font-size:2.4rem;font-weight:900;letter-spacing:0.5rem;color:#ffe082;">{{ codigo_fallback }}</div>
+  </div>
+  {% else %}
   <p class="sub">Te enviamos un código de 6 dígitos a:</p>
+  {% endif %}
   <div class="correo-pill">{{ correo }}</div>
 
   {% if error %}
