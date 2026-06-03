@@ -515,11 +515,20 @@ def _parsear_mensajes(sesion):
 
 
 def kleit_chat_ajax(request):
-    """AJAX POST — recibe {sesion_id?, mensaje, grupo} y retorna respuesta de GROK."""
+    """AJAX POST — recibe {sesion_id?, mensaje, grupo} y retorna respuesta de Gemini."""
     if request.method != 'POST':
         return JsonResponse({'error': 'invalid'}, status=405)
     if not _login_required(request):
         return JsonResponse({'error': 'No autenticado'}, status=401)
+    try:
+        return _kleit_chat_ajax_inner(request)
+    except Exception as exc:
+        import traceback
+        logger.error(f'kleit_chat_ajax crash: {traceback.format_exc()}')
+        return JsonResponse({'ok': False, 'error': f'Error interno: {type(exc).__name__}: {exc}'}, status=500)
+
+
+def _kleit_chat_ajax_inner(request):
 
     uid = _uid(request)
     try:
@@ -1435,20 +1444,27 @@ def api_estado_kleit(request):
 
     url = (f"https://generativelanguage.googleapis.com/v1beta/models/"
            f"{modelo}:generateContent?key={api_key}")
+
+    # Replicar exactamente el payload que usa _llamar_gemini
     body = json.dumps({
-        'contents': [{'role': 'user', 'parts': [{'text': 'hola'}]}],
-        'generationConfig': {'maxOutputTokens': 5},
-    }).encode()
+        'system_instruction': {'parts': [{'text': 'Eres un asistente. Responde solo con JSON: {"ok": true}'}]},
+        'contents': [{'role': 'user', 'parts': [{'text': 'test'}]}],
+        'generationConfig': {
+            'response_mime_type': 'application/json',
+            'temperature': 0.1,
+        },
+    }).encode('utf-8')
     req = urllib.request.Request(url, data=body, method='POST')
     req.add_header('Content-Type', 'application/json')
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            return JsonResponse({'gemini_activo': True, 'modelo': modelo, 'mensaje': 'API OK'})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            raw = resp.read().decode()
+            return JsonResponse({'gemini_activo': True, 'modelo': modelo, 'mensaje': 'API OK — llamada completa funciona', 'raw_preview': raw[:200]})
     except urllib.error.HTTPError as e:
-        detalle = e.read().decode(errors='ignore')[:400]
+        detalle = e.read().decode(errors='ignore')[:600]
         return JsonResponse({'gemini_activo': False, 'modelo': modelo, 'error': f'HTTP {e.code}', 'detalle': detalle})
     except Exception as e:
-        return JsonResponse({'gemini_activo': False, 'modelo': modelo, 'error': str(e)})
+        return JsonResponse({'gemini_activo': False, 'modelo': modelo, 'error': f'{type(e).__name__}: {e}'})
 
 
 def perfil_view(request):
