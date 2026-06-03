@@ -258,3 +258,20 @@ class PlanDeAula(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} — {self.titulo} ({self.get_grado_display()})"
+
+
+class ConfiguracionApp(models.Model):
+    """Configuración global de la app — solo debe existir un registro."""
+    gmail_refresh_token = models.CharField(max_length=500, blank=True)
+    gmail_email = models.EmailField(blank=True)
+
+    class Meta:
+        verbose_name = 'Configuración'
+
+    def __str__(self):
+        return f"Configuración — Gmail: {self.gmail_email or 'no conectado'}"
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

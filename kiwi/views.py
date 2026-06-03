@@ -1443,6 +1443,83 @@ def perfil_view(request):
 
 
 # ══════════════════════════════════════════════════════════════════
+# GMAIL AUTH (envío de correos del sistema)
+# ══════════════════════════════════════════════════════════════════
+
+def gmail_conectar_view(request):
+    """Inicia el flujo OAuth2 para autorizar Gmail como remitente del sistema."""
+    import urllib.parse
+    from django.conf import settings as djsettings
+    client_id = getattr(djsettings, 'GOOGLE_CLIENT_ID', '')
+    site_url  = getattr(djsettings, 'SITE_URL', 'http://127.0.0.1:8000')
+    redirect_uri = f'{site_url}/admin/gmail/callback/'
+    params = urllib.parse.urlencode({
+        'client_id':     client_id,
+        'redirect_uri':  redirect_uri,
+        'response_type': 'code',
+        'scope':         'https://www.googleapis.com/auth/gmail.send email profile',
+        'access_type':   'offline',
+        'prompt':        'consent',
+    })
+    return redirect(f'https://accounts.google.com/o/oauth2/v2/auth?{params}')
+
+
+def gmail_callback_view(request):
+    """Recibe el code de OAuth2, obtiene tokens y guarda el refresh token."""
+    import urllib.parse, json, urllib.request
+    from django.conf import settings as djsettings
+    from .models import ConfiguracionApp
+
+    code = request.GET.get('code')
+    if not code:
+        messages.error(request, 'No se recibió autorización de Gmail.')
+        return redirect('dashboard')
+
+    site_url     = getattr(djsettings, 'SITE_URL', 'http://127.0.0.1:8000')
+    redirect_uri = f'{site_url}/admin/gmail/callback/'
+    data = urllib.parse.urlencode({
+        'code':          code,
+        'client_id':     getattr(djsettings, 'GOOGLE_CLIENT_ID', ''),
+        'client_secret': getattr(djsettings, 'GOOGLE_CLIENT_SECRET', ''),
+        'redirect_uri':  redirect_uri,
+        'grant_type':    'authorization_code',
+    }).encode()
+    req = urllib.request.Request('https://oauth2.googleapis.com/token', data=data, method='POST')
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            tokens = json.loads(resp.read())
+    except Exception as e:
+        messages.error(request, f'Error conectando Gmail: {e}')
+        return redirect('dashboard')
+
+    refresh_token = tokens.get('refresh_token', '')
+    access_token  = tokens.get('access_token', '')
+
+    # Obtener el email del usuario autorizado
+    gmail_email = ''
+    if access_token:
+        try:
+            req2 = urllib.request.Request(
+                'https://www.googleapis.com/oauth2/v2/userinfo',
+                headers={'Authorization': f'Bearer {access_token}'},
+            )
+            with urllib.request.urlopen(req2, timeout=10) as r:
+                gmail_email = json.loads(r.read()).get('email', '')
+        except Exception:
+            pass
+
+    if refresh_token:
+        config = ConfiguracionApp.get()
+        config.gmail_refresh_token = refresh_token
+        config.gmail_email = gmail_email
+        config.save()
+        messages.success(request, f'Gmail conectado exitosamente: {gmail_email}')
+    else:
+        messages.warning(request, 'Gmail autorizado pero no se recibió refresh token. Intenta de nuevo.')
+    return redirect('dashboard')
+
+
+# ══════════════════════════════════════════════════════════════════
 # GOOGLE CALENDAR
 # ══════════════════════════════════════════════════════════════════
 
