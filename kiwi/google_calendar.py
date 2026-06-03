@@ -108,9 +108,11 @@ def refresh_access_token(refresh_token: str) -> str | None:
 
 
 def _get_redirect_uri(request) -> str:
+    site_url = getattr(settings, 'SITE_URL', '').rstrip('/')
+    if site_url:
+        return f"{site_url}/google/callback/"
     scheme = "https" if request.is_secure() else "http"
-    host   = request.get_host()
-    return f"{scheme}://{host}/google/callback/"
+    return f"{scheme}://{request.get_host()}/google/callback/"
 
 
 def _get_valid_token(session) -> str | None:
