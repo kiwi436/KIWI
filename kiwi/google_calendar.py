@@ -250,21 +250,22 @@ def eliminar_evento_google(session, google_event_id: str) -> bool:
     return True  # DELETE retorna 204 sin body
 
 
-def listar_eventos_google(session, dias: int = 30) -> list:
+def listar_eventos_google(session, dias: int = 60) -> list:
     """
-    Trae eventos de Google Calendar de los próximos N días.
+    Trae eventos de Google Calendar: 30 días atrás y N días hacia adelante.
     Útil para mostrar en el calendario de KIWI lo que ya existe en Google.
     """
     from datetime import datetime, timedelta
     ahora = datetime.now(tz.utc)
+    desde = ahora - timedelta(days=30)
     hasta = ahora + timedelta(days=dias)
 
     params = urllib.parse.urlencode({
-        "timeMin":    ahora.isoformat(),
-        "timeMax":    hasta.isoformat(),
+        "timeMin":      desde.isoformat(),
+        "timeMax":      hasta.isoformat(),
         "singleEvents": "true",
-        "orderBy":    "startTime",
-        "maxResults": "50",
+        "orderBy":      "startTime",
+        "maxResults":   "250",
     })
 
     result = _api_request(session, "GET", f"/calendars/primary/events?{params}")

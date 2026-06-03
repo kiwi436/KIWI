@@ -223,6 +223,20 @@
 [data-theme="dark"] .clase-chip-timed .chip-title { color: var(--blue2); }
 [data-theme="dark"] .clase-chip-timed.done .chip-title { color: #4ade80; }
 
+/* ── GOOGLE CALENDAR EVENTS ── */
+.gev-chip {
+  position: absolute; left: 3px; right: 3px;
+  background: rgba(234,67,53,0.1); border-left: 3px solid #EA4335;
+  border-radius: 5px; padding: 0.18rem 0.35rem;
+  overflow: hidden; z-index: 1;
+  display: flex; flex-direction: column; gap: 1px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.gev-chip-time { font-size: 0.55rem; font-weight: 900; color: #EA4335; line-height: 1; }
+.gev-chip-title { font-size: 0.63rem; font-weight: 700; color: #c0392b; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-theme="dark"] .gev-chip { background: rgba(234,67,53,0.15); }
+[data-theme="dark"] .gev-chip-title { color: #f87171; }
+
 /* ── DAY DETAIL MODAL ── */
 .day-clase-card {
   background: var(--blue-bg); border: 1.5px solid var(--border);
@@ -540,6 +554,8 @@ const clasesData = [
   {% endfor %}
 ];
 
+let googleEventosData = [];
+
 const DAYS_ES   = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -559,6 +575,31 @@ function getMonday(d) {
   return dt;
 }
 function classesForDate(ds) { return clasesData.filter(c => c.fecha === ds); }
+function googleEventosForDate(ds) { return googleEventosData.filter(e => e.fecha === ds); }
+function parseGoogleInicio(isoStr) {
+  if (!isoStr) return null;
+  if (isoStr.length === 10) return { fecha: isoStr, hora: null };
+  const dt = new Date(isoStr);
+  const fFecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const fHora  = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: false });
+  return { fecha: fFecha.format(dt), hora: fHora.format(dt) };
+}
+async function cargarEventosGoogle() {
+  try {
+    const resp = await fetch('/api/google/eventos/');
+    if (!resp.ok) { console.warn('[KIWI] Google eventos HTTP', resp.status); return; }
+    const data = await resp.json();
+    console.log('[KIWI] Google eventos respuesta:', data);
+    if (!data.conectado) { console.warn('[KIWI] Google no conectado:', data.debug); return; }
+    googleEventosData = data.eventos.map(e => {
+      const parsed = parseGoogleInicio(e.inicio);
+      if (!parsed) { console.warn('[KIWI] Evento sin fecha:', e); return null; }
+      return { id: e.id, titulo: e.titulo, ...parsed };
+    }).filter(Boolean);
+    console.log('[KIWI] Eventos procesados:', googleEventosData.length, googleEventosData);
+    renderWeekView(weekStart);
+  } catch(err) { console.error('[KIWI] Error cargando Google eventos:', err); }
+}
 function trunc(s, n) { return s && s.length > n ? s.slice(0,n)+'…' : (s||''); }
 function getCsrf() {
   let v = '';
@@ -622,7 +663,7 @@ function changeMiniMonth(d) {
 }
 
 /* ── WEEK VIEW — TIME GRID ── */
-const START_HOUR = 7;   // primera franja visible (7:00)
+const START_HOUR = 6;   // primera franja visible (6:00)
 const END_HOUR   = 20;  // última franja visible (20:00)
 const PX_PER_HOUR = 64; // altura en px de cada hora
 const TOTAL_H = (END_HOUR - START_HOUR) * PX_PER_HOUR;
@@ -705,6 +746,22 @@ function renderWeekView(monday) {
       col.appendChild(chip);
     });
 
+    // Chips de Google Calendar
+    googleEventosForDate(ds).forEach(e => {
+      if (!e.hora) return;
+      const [hh, mm] = e.hora.split(':').map(Number);
+      if (hh < START_HOUR || hh >= END_HOUR) return;
+      const topPx = (hh - START_HOUR) * PX_PER_HOUR + mm * (PX_PER_HOUR / 60);
+      const chip = document.createElement('div');
+      chip.className = 'gev-chip';
+      chip.style.top    = topPx + 'px';
+      chip.style.height = (PX_PER_HOUR - 6) + 'px';
+      chip.title = `${e.hora} — ${e.titulo} (Google Calendar)`;
+      chip.innerHTML = `<div class="gev-chip-time"><i class="fa-brands fa-google" style="font-size:0.48rem;"></i> ${e.hora}</div>
+        <div class="gev-chip-title">${trunc(e.titulo, 22)}</div>`;
+      col.appendChild(chip);
+    });
+
     daysGrid.appendChild(col);
   }
 }
@@ -728,17 +785,13 @@ function openDayModal(dateStr) {
     `<i class="fa-solid fa-calendar-day" style="color:var(--blue2);margin-right:0.4rem;font-size:0.82rem;"></i>${names[dow]}, ${d} de ${MONTHS_ES[m-1]} de ${y}`;
 
   const classes = classesForDate(dateStr);
+  const gEvents = googleEventosForDate(dateStr).filter(e => e.hora);
   const cont = document.getElementById('dayDetailContent');
 
-  if (!classes.length) {
-    cont.innerHTML = `<div style="text-align:center;padding:1.75rem 1rem;">
-      <div style="font-size:2.2rem;color:var(--blue2);opacity:0.35;margin-bottom:0.65rem;"><i class="fa-solid fa-calendar-xmark"></i></div>
-      <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 0.75rem;">Sin clases programadas para este día</p>
-      <button onclick="closeDayModal();openNuevaClaseModal();" class="btn-kiwi btn-kiwi-blue btn-kiwi-sm">
-        <i class="fa-solid fa-plus"></i> Nueva clase
-      </button></div>`;
-  } else {
-    cont.innerHTML = classes.map(c => {
+  let html = '';
+
+  if (classes.length) {
+    html += classes.map(c => {
       const safeTitle = c.titulo.replace(/'/g,"\\'");
       return `<div class="day-clase-card">
         <div class="day-clase-top">
@@ -762,6 +815,33 @@ function openDayModal(dateStr) {
       </div>`;
     }).join('');
   }
+
+  if (gEvents.length) {
+    html += gEvents.map(e => `
+      <div class="day-clase-card" style="border-color:rgba(234,67,53,0.3);background:rgba(234,67,53,0.05);">
+        <div class="day-clase-top">
+          <span class="day-clase-time" style="color:#EA4335;">${e.hora}</span>
+          <div style="flex:1;min-width:0;">
+            <div class="day-clase-title">${e.titulo}</div>
+            <div class="day-clase-meta">
+              <i class="fa-brands fa-google" style="color:#EA4335;font-size:0.7rem;"></i>
+              <span style="font-size:0.72rem;color:var(--text-muted);">Google Calendar</span>
+            </div>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  if (!html) {
+    html = `<div style="text-align:center;padding:1.75rem 1rem;">
+      <div style="font-size:2.2rem;color:var(--blue2);opacity:0.35;margin-bottom:0.65rem;"><i class="fa-solid fa-calendar-xmark"></i></div>
+      <p style="color:var(--text-muted);font-size:0.84rem;margin:0 0 0.75rem;">Sin clases programadas para este día</p>
+      <button onclick="closeDayModal();openNuevaClaseModal();" class="btn-kiwi btn-kiwi-blue btn-kiwi-sm">
+        <i class="fa-solid fa-plus"></i> Nueva clase
+      </button></div>`;
+  }
+
+  cont.innerHTML = html;
   document.getElementById('dayDetailOverlay').classList.add('show');
 }
 function closeDayModal() { document.getElementById('dayDetailOverlay').classList.remove('show'); }
@@ -808,6 +888,7 @@ function confirmarYEnviar() {
 renderMiniCal(miniYear, miniMonth);
 weekStart = getMonday(todayObj);
 renderWeekView(weekStart);
+cargarEventosGoogle();
 </script>
 
 {% endblock %}{% endwith %}

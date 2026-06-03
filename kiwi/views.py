@@ -1699,10 +1699,11 @@ def api_google_eventos(request):
     if not _login_required(request):
         return JsonResponse({'error': 'No autenticado'}, status=401)
     if not gcal.is_connected(request.session):
-        return JsonResponse({'conectado': False, 'eventos': []})
-    eventos = gcal.listar_eventos_google(request.session, dias=30)
+        return JsonResponse({'conectado': False, 'eventos': [], 'debug': 'sin_token'})
+    eventos = gcal.listar_eventos_google(request.session)
     return JsonResponse({
         'conectado': True,
+        'total': len(eventos),
         'eventos': [
             {
                 'id': e.get('id'),
